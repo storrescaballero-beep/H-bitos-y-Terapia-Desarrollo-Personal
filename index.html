@@ -1,0 +1,1629 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#F7F5F0">
+<title>Mi App Personal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+/* ── Reset & Base ─────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #F7F5F0;
+  --card: #FFFFFF;
+  --text: #1A1917;
+  --t2: #6B6860;
+  --t3: #A09E98;
+  --border: #E8E5DF;
+  --acc: #C85A2E;
+  --acc2: #E8915A;
+  --green: #2E7D5A;
+  --blue: #2655A0;
+  --purple: #5A3A8A;
+  --amber: #B87020;
+  --r: 14px;
+  --sh: 0 1px 4px rgba(0,0,0,0.07);
+  --font-body: 'DM Sans', sans-serif;
+  --font-display: 'Lora', serif;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+html { height: 100%; }
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100%;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+}
+
+/* ── App Shell ────────────────────────────────────────────────── */
+.shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  max-width: 480px;
+  margin: 0 auto;
+  background: var(--bg);
+  position: relative;
+}
+
+/* ── Topbar ───────────────────────────────────────────────────── */
+.tb {
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  padding: 13px 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+.tb-back {
+  background: none;
+  border: none;
+  color: var(--t2);
+  cursor: pointer;
+  font-size: 20px;
+  padding: 2px 8px;
+  border-radius: 8px;
+  line-height: 1;
+  font-family: var(--font-body);
+}
+.tb-back:hover { background: var(--bg); }
+.tb-title { font-size: 15px; font-weight: 500; flex: 1; }
+.tb-btn {
+  background: var(--acc);
+  color: #fff;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: var(--font-body);
+}
+.tb-btn:hover { background: var(--acc2); }
+.tb-btn.purple { background: var(--purple); }
+.tb-btn.green  { background: var(--green);  }
+
+/* ── Content ──────────────────────────────────────────────────── */
+.ct {
+  flex: 1;
+  padding: 16px;
+  padding-bottom: calc(84px + var(--safe-bottom));
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── Bottom Nav ───────────────────────────────────────────────── */
+.bnav {
+  background: var(--card);
+  border-top: 1px solid var(--border);
+  display: flex;
+  position: sticky;
+  bottom: 0;
+  z-index: 50;
+  padding-bottom: var(--safe-bottom);
+}
+.ni {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 9px 4px 11px;
+  cursor: pointer;
+  gap: 2px;
+  border: none;
+  background: none;
+  color: var(--t3);
+  font-size: 9px;
+  font-weight: 500;
+  font-family: var(--font-body);
+  transition: color 0.15s;
+}
+.ni.on { color: var(--acc); }
+.ni svg { width: 19px; height: 19px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ── Cards ────────────────────────────────────────────────────── */
+.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--r); padding: 14px; margin-bottom: 10px; box-shadow: var(--sh); }
+.cl { font-size: 11px; font-weight: 500; color: var(--t2); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 9px; }
+
+/* ── Forms ────────────────────────────────────────────────────── */
+.fg { margin-bottom: 14px; }
+.fl { font-size: 12px; font-weight: 500; color: var(--t2); margin-bottom: 5px; display: block; }
+.fi {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 9px 11px;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--card);
+  outline: none;
+  font-family: var(--font-body);
+  transition: border-color 0.15s, box-shadow 0.15s;
+  -webkit-appearance: none;
+}
+.fi:focus { border-color: var(--acc2); box-shadow: 0 0 0 3px rgba(200,90,46,.08); }
+.ta {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 9px 11px;
+  font-size: 14px;
+  color: var(--text);
+  background: var(--card);
+  outline: none;
+  font-family: var(--font-body);
+  resize: vertical;
+  min-height: 76px;
+  line-height: 1.6;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.ta:focus { border-color: var(--acc2); box-shadow: 0 0 0 3px rgba(200,90,46,.08); }
+select.fi {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7' fill='none'%3E%3Cpath d='M1 1l4.5 4.5L10 1' stroke='%236B6860' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 11px center;
+  padding-right: 32px;
+}
+
+/* ── Buttons ──────────────────────────────────────────────────── */
+.bp {
+  width: 100%;
+  background: var(--acc);
+  color: #fff;
+  border: none;
+  padding: 13px;
+  border-radius: 11px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: var(--font-body);
+  margin-top: 8px;
+  transition: background 0.15s;
+}
+.bp:hover { background: var(--acc2); }
+.bp.purple { background: var(--purple); }
+.bp.green { background: var(--green); }
+.bs {
+  width: 100%;
+  background: var(--card);
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 12px;
+  border-radius: 11px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: var(--font-body);
+  margin-top: 6px;
+}
+.bs:hover { background: var(--bg); }
+
+/* ── Chips & Emotions ─────────────────────────────────────────── */
+.chip { background: var(--bg); border: 1px solid var(--border); border-radius: 20px; padding: 4px 10px; font-size: 11px; color: var(--t2); cursor: pointer; user-select: none; transition: all .15s; display: inline-block; font-family: var(--font-body); }
+.chip.on { background: var(--acc); color: #fff; border-color: var(--acc); }
+.ebtn { background: var(--bg); border: 1px solid var(--border); border-radius: 20px; padding: 5px 10px; font-size: 12px; cursor: pointer; transition: all .15s; display: inline-block; font-family: var(--font-body); }
+.ebtn.on { border-color: var(--acc); background: #FFF5EF; }
+
+/* ── Entry Cards ──────────────────────────────────────────────── */
+.ec { background: var(--card); border: 1px solid var(--border); border-radius: 11px; padding: 13px; box-shadow: var(--sh); margin-bottom: 9px; }
+.em { font-size: 10px; color: var(--t3); margin-bottom: 5px; }
+.et { font-size: 13px; font-weight: 500; margin-bottom: 3px; }
+.eb { font-size: 12px; color: var(--t2); line-height: 1.5; }
+.tag { display: inline-block; border-radius: 20px; padding: 2px 7px; font-size: 10px; font-weight: 500; margin: 2px 3px 2px 0; }
+.tag-o { background: #FFF8EE; color: #8A5010; }
+.tag-g { background: #F0FAF5; color: #1A5A3A; }
+.tag-p { background: #F5F0FF; color: #4A2A7A; }
+.tag-b { background: #EEF3FF; color: #1A3A80; }
+
+/* ── Habit Grid ───────────────────────────────────────────────── */
+.hgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-bottom: 14px; }
+.hcard { background: var(--card); border: 1px solid var(--border); border-radius: 11px; padding: 11px; cursor: pointer; transition: all .15s; box-shadow: var(--sh); }
+.hcard.done { border-color: var(--green); background: #F0FAF5; }
+.hcard.partial { border-color: var(--amber); background: #FFF8EE; }
+
+/* ── Progress Ring ────────────────────────────────────────────── */
+.ring { transform: rotate(-90deg); }
+.rt { fill: none; stroke: #F0EFEB; stroke-width: 8; }
+.rp { fill: none; stroke: var(--acc); stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset .5s; }
+
+/* ── Report Toggles ───────────────────────────────────────────── */
+.rti { display: flex; align-items: center; justify-content: space-between; background: var(--card); border: 1px solid var(--border); border-radius: 11px; padding: 11px 13px; cursor: pointer; transition: border-color .15s; margin-bottom: 7px; }
+.rti.on { border-color: var(--acc); background: #FFF8F5; }
+.tpill { width: 34px; height: 19px; border-radius: 10px; background: var(--border); position: relative; transition: background .2s; flex-shrink: 0; }
+.tpill.on { background: var(--acc); }
+.tdot { width: 15px; height: 15px; border-radius: 50%; background: #fff; position: absolute; top: 2px; left: 2px; transition: left .2s; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+.tpill.on .tdot { left: 17px; }
+
+/* ── Toast ────────────────────────────────────────────────────── */
+.toast {
+  position: fixed;
+  bottom: calc(75px + var(--safe-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1A1917;
+  color: #fff;
+  padding: 9px 18px;
+  border-radius: 20px;
+  font-size: 12px;
+  z-index: 999;
+  opacity: 0;
+  transition: opacity .2s;
+  pointer-events: none;
+  white-space: nowrap;
+  font-family: var(--font-body);
+}
+.toast.show { opacity: 1; }
+
+/* ── Cognitive Steps ──────────────────────────────────────────── */
+.cpbar { background: var(--border); border-radius: 3px; height: 3px; margin-bottom: 18px; overflow: hidden; }
+.cpfill { height: 3px; border-radius: 3px; background: var(--purple); transition: width .35s; }
+.cstep { animation: fin .2s ease; }
+@keyframes fin { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+.cnum { font-size: 10px; color: var(--purple); font-weight: 500; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 3px; }
+.ctitle { font-size: 18px; font-weight: 500; line-height: 1.3; margin-bottom: 5px; font-family: var(--font-display); }
+.chint { font-size: 12px; color: var(--t2); line-height: 1.5; margin-bottom: 14px; }
+.ibox { border-radius: 11px; padding: 12px; margin-bottom: 12px; font-size: 12px; line-height: 1.6; }
+.ibox-p { background: #F5F0FF; border: 1px solid #C8B8F0; color: #4A2A7A; }
+.ibox-g { background: #F0FAF5; border: 1px solid #A0DBC0; color: #1A5A3A; }
+.ibox-o { background: #FFF8EE; border: 1px solid #F5D5A0; color: #8A5010; }
+.ibox-t { background: #F0FAFA; border: 1px solid #A0D8D8; color: #0A5A5A; }
+.nar-old { background: #FFF5F5; border: 1px solid #F5C0C0; border-radius: 9px; padding: 10px; font-size: 13px; color: #A02020; text-decoration: line-through; opacity: .7; margin-bottom: 8px; }
+.nar-new { background: #F0FAF5; border: 1px solid #A0DBC0; border-radius: 9px; padding: 10px; font-size: 13px; color: var(--green); font-weight: 500; }
+.cn-prev { flex: 1; background: var(--card); border: 1px solid var(--border); border-radius: 11px; padding: 11px; font-size: 13px; color: var(--t2); cursor: pointer; font-family: var(--font-body); }
+.cn-next { flex: 2; background: var(--purple); border: none; border-radius: 11px; padding: 11px; font-size: 13px; font-weight: 500; color: #fff; cursor: pointer; font-family: var(--font-body); }
+.cn-next:hover { opacity: .9; }
+
+/* ── Stats ────────────────────────────────────────────────────── */
+.stat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 14px; }
+.stat-card { background: var(--card); border: 1px solid var(--border); border-radius: 11px; padding: 11px; text-align: center; box-shadow: var(--sh); }
+.stat-num { font-size: 22px; font-weight: 500; font-family: var(--font-display); }
+.stat-lbl { font-size: 10px; color: var(--t3); margin-top: 2px; }
+
+/* ── Streak Calendar ──────────────────────────────────────────── */
+.scal { display: grid; grid-template-columns: repeat(7,1fr); gap: 3px; margin-bottom: 8px; }
+.sday { aspect-ratio: 1; border-radius: 4px; font-size: 9px; display: flex; align-items: center; justify-content: center; color: var(--t3); }
+.sday.done { background: var(--acc); color: #fff; }
+.sday.partial { background: var(--amber); color: #fff; }
+.sday.empty { background: var(--border); }
+
+/* ── Tabs ─────────────────────────────────────────────────────── */
+.tabs { display: flex; gap: 4px; margin-bottom: 14px; }
+.tab { flex: 1; text-align: center; padding: 7px 4px; border-radius: 9px; font-size: 11px; font-weight: 500; cursor: pointer; border: 1px solid var(--border); background: var(--card); color: var(--t2); font-family: var(--font-body); white-space: nowrap; transition: all 0.15s; }
+.tab.on { background: var(--purple); color: #fff; border-color: var(--purple); }
+
+/* ── PDF Frame ────────────────────────────────────────────────── */
+.pdf-frame { background: #fff; border: 1px solid var(--border); border-radius: var(--r); overflow: hidden; margin-top: 12px; }
+.pdf-page { padding: 20px; }
+.pdf-h { border-bottom: 2px solid var(--acc); padding-bottom: 14px; margin-bottom: 16px; }
+.pdf-t { font-size: 18px; font-weight: 500; color: var(--acc); font-family: var(--font-display); }
+.pdf-s { font-size: 11px; color: var(--t3); margin-top: 3px; }
+.pdf-sec { margin-bottom: 16px; }
+.pdf-st { font-size: 11px; font-weight: 500; background: var(--bg); padding: 5px 9px; border-radius: 5px; margin-bottom: 8px; text-transform: uppercase; letter-spacing: .04em; }
+.pbar { display: flex; align-items: center; gap: 7px; margin-bottom: 5px; font-size: 11px; }
+.pbtrack { flex: 1; background: #F0EFEB; border-radius: 3px; height: 5px; overflow: hidden; }
+.pbfill { height: 5px; border-radius: 3px; }
+.pe { border-left: 3px solid var(--purple); padding: 5px 9px; margin-bottom: 7px; font-size: 11px; }
+.pe-d { font-size: 9px; color: var(--t3); margin-bottom: 2px; }
+
+/* ── Diary Guide ──────────────────────────────────────────────── */
+.dguide-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-bottom: 0;
+}
+.dguide-step {
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  background: var(--card);
+  overflow: hidden;
+  margin-bottom: 8px;
+  box-shadow: var(--sh);
+  transition: border-color 0.15s;
+}
+.dguide-step.active {
+  border-color: var(--acc2);
+  box-shadow: 0 0 0 3px rgba(200,90,46,.06), var(--sh);
+}
+.dguide-step.filled {
+  border-color: var(--green);
+}
+.dguide-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 13px;
+  cursor: pointer;
+  user-select: none;
+}
+.dguide-num {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--t3);
+  flex-shrink: 0;
+  margin-top: 1px;
+  transition: all 0.15s;
+}
+.dguide-step.active .dguide-num {
+  background: var(--acc);
+  border-color: var(--acc);
+  color: #fff;
+}
+.dguide-step.filled .dguide-num {
+  background: var(--green);
+  border-color: var(--green);
+  color: #fff;
+}
+.dguide-q {
+  flex: 1;
+}
+.dguide-question {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.4;
+  margin-bottom: 1px;
+  font-family: var(--font-display);
+}
+.dguide-hint {
+  font-size: 11px;
+  color: var(--t3);
+  line-height: 1.4;
+}
+.dguide-preview {
+  font-size: 12px;
+  color: var(--t2);
+  margin-top: 4px;
+  font-style: italic;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.dguide-body {
+  padding: 0 13px 13px;
+  display: none;
+}
+.dguide-step.active .dguide-body,
+.dguide-step.open .dguide-body {
+  display: block;
+}
+.dguide-ta {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 9px 11px;
+  font-size: 13px;
+  color: var(--text);
+  background: var(--bg);
+  outline: none;
+  font-family: var(--font-body);
+  resize: none;
+  line-height: 1.6;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  min-height: 72px;
+}
+.dguide-ta:focus {
+  border-color: var(--acc2);
+  box-shadow: 0 0 0 3px rgba(200,90,46,.08);
+  background: #fff;
+}
+.dguide-next {
+  margin-top: 8px;
+  background: var(--acc);
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: var(--font-body);
+  float: right;
+}
+.dguide-next:hover { background: var(--acc2); }
+.dguide-clear { float: left; }
+.dguide-clear::after { content: ''; display: table; clear: both; }
+
+/* Special step 6 — sergio check */
+.sergio-check-wrap {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+.sergio-btn {
+  flex: 1;
+  padding: 10px 8px;
+  border-radius: 9px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: var(--font-body);
+  text-align: center;
+  transition: all 0.15s;
+  line-height: 1.4;
+}
+.sergio-btn.inseguro.on {
+  background: #FFF0E8;
+  border-color: var(--acc2);
+  color: var(--acc);
+}
+.sergio-btn.seguro.on {
+  background: #F0FAF5;
+  border-color: var(--green);
+  color: var(--green);
+}
+
+/* ── Diary Mode Toggle ────────────────────────────────────────── */
+.dmode-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+  background: var(--bg);
+  border-radius: 10px;
+  padding: 4px;
+}
+.dmode-tab {
+  flex: 1;
+  padding: 7px;
+  border-radius: 7px;
+  border: none;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--t2);
+  cursor: pointer;
+  font-family: var(--font-body);
+  text-align: center;
+  transition: all 0.15s;
+}
+.dmode-tab.on {
+  background: var(--card);
+  color: var(--acc);
+  box-shadow: var(--sh);
+}
+
+/* ── Progress Bar ─────────────────────────────────────────────── */
+.diary-progress {
+  display: flex;
+  gap: 3px;
+  margin-bottom: 14px;
+}
+.dp-dot {
+  flex: 1;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--border);
+  transition: background 0.3s;
+}
+.dp-dot.done { background: var(--acc); }
+.dp-dot.current { background: var(--acc2); }
+
+/* ── Empty State ──────────────────────────────────────────────── */
+.empty { text-align: center; padding: 40px 20px; color: var(--t3); }
+.empty-icon { font-size: 36px; margin-bottom: 10px; }
+.empty-text { font-size: 13px; line-height: 1.6; }
+</style>
+</head>
+<body>
+<div class="shell" id="app"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════════════════════
+const HC = [
+  {k:'strength',  ic:'💪', n:'Fuerza',     g:60},
+  {k:'cardio',    ic:'🏃', n:'Cardio',     g:30},
+  {k:'meditation',ic:'🧘', n:'Meditación', g:30},
+  {k:'breathing', ic:'🌬️',n:'Respiración',g:15},
+  {k:'reading',   ic:'📚', n:'Lectura',    g:30},
+  {k:'duolingo',  ic:'🌍', n:'Idiomas',    g:30},
+];
+const MUSCLES = ['Pecho','Espalda','Hombros','Bíceps','Tríceps','Piernas','Glúteos','Abdomen','Full body','Empuje','Tirón','Tren superior','Tren inferior'];
+const CTYPES  = ['Comba','Sentadillas','Yoga','Natación','Caminar','Correr','Bicicleta','Elíptica','Otro'];
+const EMOTIONS = ['😌 Calma','😊 Alegría','😤 Frustración','😟 Ansiedad','😔 Tristeza','😡 Enfado','🤗 Gratitud','😴 Cansancio','💪 Motivación','🤔 Confusión'];
+const BIASES = [
+  {k:'catastrophizing', l:'Catastrofismo',         d:'Imaginas el peor escenario posible'},
+  {k:'mind_reading',    l:'Leer la mente',          d:'Asumes lo que el otro piensa'},
+  {k:'all_or_nothing',  l:'Todo o nada',            d:'O perfecto o un fracaso'},
+  {k:'emotional_reasoning',l:'Razonamiento emocional',d:'Siento ansiedad = algo va mal'},
+  {k:'personalization', l:'Personalización',        d:'Todo lo malo es culpa mía'},
+  {k:'overgeneralization',l:'Sobregeneralización',  d:'De un caso sacas una regla universal'},
+  {k:'filtering',       l:'Filtro negativo',        d:'Solo ves lo negativo'},
+  {k:'should',          l:'Debo / tengo que',       d:'Reglas rígidas sobre cómo debe ser todo'},
+];
+const COGN = [
+  {num:'1/8',title:'¿Qué situación activó el malestar?',hint:'Solo los hechos, sin interpretaciones.',f:'situation',type:'text',ph:'Ej: Mi pareja tardó 3h en contestar'},
+  {num:'2/8',title:'¿Cuál fue la narrativa que te contaste?',hint:'El relato automático que tu mente construyó.',f:'narrative_old',type:'textarea',ph:'Ej: "No le importo, algo va mal."'},
+  {num:'3/8',title:'¿Qué emoción sentiste y con qué intensidad?',hint:'La emoción primaria y cuánto peso tuvo.',f:'emotion',type:'emotion_intensity'},
+  {num:'4/8',title:'Examina la narrativa',hint:'¿Qué evidencias reales tienes a favor? ¿Y en contra?',f:'evidence',type:'evidence'},
+  {num:'5/8',title:'¿Qué sesgo cognitivo hay aquí?',hint:'Identifica el patrón de pensamiento que actúa.',f:'bias',type:'bias_select'},
+  {num:'6/8',title:'¿Qué necesidad real hay detrás?',hint:'Debajo del malestar, ¿qué necesitas realmente?',f:'need',type:'text',ph:'Ej: seguridad, conexión, reconocimiento...'},
+  {num:'7/8',title:'Construye una narrativa nueva',hint:'Más equilibrada y compasiva. No tiene que ser positiva, solo más justa.',f:'narrative_new',type:'narrative_builder'},
+  {num:'8/8',title:'¿Qué acción coherente puedes tomar?',hint:'Desde esta nueva narrativa, ¿qué harías diferente?',f:'action',type:'textarea',ph:'Ej: respirar, confiar, no reaccionar impulsivamente.'},
+];
+const RSECS = [
+  {k:'habits',   ic:'⏱', n:'Hábitos diarios',  d:'Progreso y cumplimiento'},
+  {k:'training', ic:'💪', n:'Entrenamiento',     d:'Fuerza, cardio, músculos'},
+  {k:'diary',    ic:'📔', n:'Diario personal',   d:'Entradas y emociones'},
+  {k:'thoughts', ic:'🧠', n:'Pensamientos',      d:'Registros y reconstrucciones'},
+  {k:'sergio',   ic:'💜', n:'Modo Sergio seguro',d:'Momentos de regulación'},
+];
+const DIARY_GUIDE = [
+  {
+    q: '¿Qué ha pasado hoy?',
+    hint: 'Resumen objetivo, sin drama. Solo hechos.',
+    ph: 'Hoy he... Me he reunido con... Ha pasado que...',
+    key: 'what_happened',
+    type: 'textarea'
+  },
+  {
+    q: '¿Qué he sentido realmente?',
+    hint: 'Rabia, miedo, tristeza, culpa, orgullo, calma, ansiedad, inseguridad, esperanza…',
+    ph: 'He sentido... Lo que más ha pesado ha sido...',
+    key: 'feelings',
+    type: 'textarea'
+  },
+  {
+    q: '¿Qué pensamiento se ha repetido?',
+    hint: '"No soy suficiente", "me van a abandonar", "voy tarde", "no avanzo", "necesito controlar esto".',
+    ph: 'El pensamiento que más ha aparecido es...',
+    key: 'repeated_thought',
+    type: 'textarea'
+  },
+  {
+    q: '¿Qué me ha activado emocionalmente?',
+    hint: 'Una persona, conversación, espera, comparación, recuerdo, exigencia, sensación corporal.',
+    ph: 'Me ha activado... cuando... porque...',
+    key: 'trigger',
+    type: 'textarea'
+  },
+  {
+    q: '¿Qué hice con esa emoción?',
+    hint: 'Reaccioné, evité, escribí, entrené, respiré, medité, trabajé, me aislé, hablé, pedí ayuda.',
+    ph: 'Lo que hice fue... Mi reacción fue...',
+    key: 'action_taken',
+    type: 'textarea'
+  },
+  {
+    q: '¿Actué como el Sergio inseguro o como el Sergio seguro?',
+    hint: 'Aquí está la clave. Sin juicio, solo observación honesta.',
+    ph: null,
+    key: 'sergio_mode',
+    type: 'sergio_check'
+  },
+  {
+    q: '¿Qué habría hecho mi versión más segura?',
+    hint: 'No la ideal. La realista. La que respira, piensa y actúa con dignidad.',
+    ph: 'El Sergio seguro habría... En lugar de...',
+    key: 'secure_action',
+    type: 'textarea'
+  },
+  {
+    q: '¿Qué aprendizaje me llevo?',
+    hint: 'Una frase clara. No un párrafo, una frase.',
+    ph: 'Hoy he aprendido que...',
+    key: 'learning',
+    type: 'textarea'
+  },
+  {
+    q: '¿Qué necesito hacer mañana?',
+    hint: 'Una acción concreta, no una intención bonita.',
+    ph: 'Mañana voy a... (algo específico, no "intentar mejorar")',
+    key: 'tomorrow_action',
+    type: 'text'
+  },
+];
+const QUOTES = [
+  "Cada pequeño paso cuenta.",
+  "La constancia supera al talento.",
+  "El Sergio seguro confía en el proceso.",
+  "No tienes que ser perfecto, solo avanzar.",
+  "Lo que haces hoy es quien serás mañana.",
+  "Observar sin juzgar es el primer paso.",
+  "Respirar antes de reaccionar es sabiduría.",
+];
+const NAVS = [
+  {k:'dash',    l:'Inicio',  svg:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/>'},
+  {k:'habits',  l:'Hábitos', svg:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>'},
+  {k:'training',l:'Entreno', svg:'<path d="M6 12h12M4 9l2 3-2 3M18 9l2 3-2 3"/>'},
+  {k:'thoughts',l:'Mente',   svg:'<path d="M4 6h16M4 10h10M4 14h12M4 18h8"/>'},
+  {k:'stats',   l:'Stats',   svg:'<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 12v4M12 8v8M16 10v6"/>'},
+];
+
+// ═══════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════
+const ST = {
+  sc: 'dash',
+  habits: {}, trainings: [], diaries: [], thoughts: [], sergio: [],
+  today: new Date().toISOString().split('T')[0],
+  form: {}, muscles: [], emotion: '',
+  // Diary mode: 'guided' | 'free'
+  diaryMode: 'guided',
+  // Active guide step (0-8)
+  diaryStep: 0,
+  // Guide answers accumulator
+  diaryAnswers: {},
+  // Open steps (for accordion)
+  diaryOpenSteps: new Set([0]),
+  ttab: 'list',
+  cstep: 0, cform: {},
+  rsecs: {habits:true, training:true, diary:true, thoughts:true, sergio:true},
+  rpreset: 'week', rfrom: '', rto: '', rgen: false,
+  stab: 'habits',
+};
+
+// ═══════════════════════════════════════════════════════════════
+// STORAGE
+// ═══════════════════════════════════════════════════════════════
+const SKEYS = ['habits','trainings','diaries','thoughts','sergio'];
+
+function lsGet(key) {
+  try { const v = localStorage.getItem('sg5_'+key); return v ? JSON.parse(v) : null; } catch { return null; }
+}
+function lsSet(key, val) {
+  try { localStorage.setItem('sg5_'+key, JSON.stringify(val)); } catch(e) { console.warn('save:', key, e); }
+}
+function loadAll() {
+  for (const k of SKEYS) {
+    const v = lsGet(k);
+    if (v !== null) ST[k] = v;
+  }
+}
+function persist(key) { lsSet(key, ST[key]); }
+
+// ═══════════════════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════════════════
+const td  = () => ST.today;
+const th  = () => ST.habits[td()] || {};
+function setH(k, v) { if (!ST.habits[td()]) ST.habits[td()] = {}; ST.habits[td()][k] = v; persist('habits'); }
+function pct(v, g)  { return Math.min(100, Math.round(((v||0)/g)*100)); }
+function dayProg() {
+  const h=th(), got=HC.reduce((s,c)=>s+Math.min(h[c.k]||0,c.g),0), max=HC.reduce((s,c)=>s+c.g,0);
+  return Math.round(got/max*100);
+}
+function calcStreak() {
+  let s=0, d=new Date(td()+'T12:00:00');
+  for (let i=0; i<365; i++) {
+    const k=d.toISOString().split('T')[0], h=ST.habits[k]||{};
+    if (HC.some(c=>(h[c.k]||0)>=c.g)) { s++; d.setDate(d.getDate()-1); } else break;
+  }
+  return s;
+}
+function fdate(iso) {
+  if (!iso) return '';
+  const d = new Date(iso+'T12:00:00');
+  return d.toLocaleDateString('es-ES', {weekday:'short', day:'numeric', month:'short'});
+}
+function ftime(iso) {
+  try { return new Date(iso).toLocaleTimeString('es-ES', {hour:'2-digit', minute:'2-digit'}); } catch { return ''; }
+}
+function isoToday() { return new Date().toISOString().split('T')[0]; }
+function dateAdd(iso, n) { const d=new Date(iso+'T12:00:00'); d.setDate(d.getDate()+n); return d.toISOString().split('T')[0]; }
+function setPreset(p) {
+  ST.rpreset = p;
+  const t = isoToday();
+  if (p==='today')  { ST.rfrom=t; ST.rto=t; }
+  if (p==='week')   { ST.rfrom=dateAdd(t,-6); ST.rto=t; }
+  if (p==='month')  { ST.rfrom=dateAdd(t,-29); ST.rto=t; }
+}
+function safeChart(id, config) {
+  const el = document.getElementById(id); if (!el) return;
+  const ex = Chart.getChart(el); if (ex) ex.destroy();
+  new Chart(el, config);
+}
+function toast(msg) {
+  const t = document.getElementById('toast'); if (!t) return;
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._t); t._t = setTimeout(()=>t.classList.remove('show'), 2400);
+}
+function go(sc) {
+  ST.sc = sc;
+  ST.form = {}; ST.muscles = []; ST.emotion = '';
+  if (sc==='reports') ST.rgen = false;
+  if (sc==='cogn_form') { ST.cstep=0; ST.cform={}; }
+  if (sc==='diary_form') { ST.diaryStep=0; ST.diaryAnswers={}; ST.diaryOpenSteps=new Set([0]); }
+  render();
+}
+function nav(active) {
+  return `<div class="bnav">${NAVS.map(n=>`<button class="ni${n.k===active?' on':''}" data-nav="${n.k}"><svg viewBox="0 0 24 24">${n.svg}</svg><span>${n.l}</span></button>`).join('')}</div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// RENDER DISPATCHER
+// ═══════════════════════════════════════════════════════════════
+function render() {
+  const app = document.getElementById('app'); if (!app) return;
+  const sc = ST.sc;
+  let html = '';
+  if      (sc==='dash')          html = rDash();
+  else if (sc==='habits')        html = rHabits();
+  else if (sc==='training')      html = rTraining();
+  else if (sc==='training_form') html = rTrainingForm();
+  else if (sc==='diary_form')    html = rDiaryForm();
+  else if (sc==='thoughts')      html = rThoughts();
+  else if (sc==='thought_form')  html = rThoughtForm();
+  else if (sc==='cogn_form')     html = rCognForm();
+  else if (sc==='sergio_form')   html = rSergioForm();
+  else if (sc==='stats')         html = rStats();
+  else if (sc==='reports')       html = rReports();
+  app.innerHTML = html;
+  attachAll();
+  if (sc==='stats')              drawCharts();
+  if (sc==='reports' && ST.rgen) drawReportChart();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════════════════════
+function rDash() {
+  const prog=dayProg(), str=calcStreak(), h=th(), now=new Date();
+  const R=38, C=+(2*Math.PI*R).toFixed(1), off=+(C-(prog/100)*C).toFixed(1);
+  const hCards = HC.map(hc => {
+    const v=h[hc.k]||0, p=pct(v,hc.g);
+    const cl=p>=100?'done':p>0?'partial':'';
+    const bg=p>=100?'var(--green)':p>0?'var(--amber)':'#DDD';
+    return `<div class="hcard ${cl}" data-go="habits">
+      <div style="font-size:19px;margin-bottom:4px">${hc.ic}</div>
+      <div style="font-size:11px;font-weight:500;margin-bottom:2px">${hc.n}</div>
+      <div style="font-size:10px;color:var(--t3)">${v}/${hc.g}m</div>
+      <div style="background:#F0EFEB;border-radius:3px;height:3px;margin-top:5px;overflow:hidden">
+        <div style="height:3px;border-radius:3px;width:${p}%;background:${bg}"></div>
+      </div>
+    </div>`;
+  }).join('');
+  return `
+  <div style="background:var(--card);border-bottom:1px solid var(--border);padding:13px 18px;display:flex;align-items:center;justify-content:space-between">
+    <div>
+      <div style="font-size:11px;color:var(--t3);text-transform:capitalize">${now.toLocaleDateString('es-ES',{weekday:'long'})}</div>
+      <div style="font-size:19px;font-weight:500;font-family:var(--font-display)">${now.toLocaleDateString('es-ES',{day:'numeric',month:'long'})}</div>
+    </div>
+    ${str>0?`<div style="background:#FFF5EF;border:1px solid #F5D5C0;border-radius:20px;padding:3px 10px;font-size:12px;color:var(--acc);font-weight:500">🔥 ${str} día${str!==1?'s':''}</div>`:''}
+  </div>
+  <div class="ct">
+    <div style="background:#FFF8F5;border:1px solid #F5D5C0;border-radius:var(--r);padding:12px 14px;margin-bottom:14px">
+      <div style="font-size:13px;color:var(--acc);font-style:italic;font-family:var(--font-display)">"${QUOTES[now.getDay()%QUOTES.length]}"</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:14px;box-shadow:var(--sh)">
+      <div style="position:relative;display:flex;align-items:center;justify-content:center;width:86px;height:86px;flex-shrink:0">
+        <svg width="86" height="86" class="ring">
+          <circle class="rt" cx="43" cy="43" r="${R}"/>
+          <circle class="rp" cx="43" cy="43" r="${R}" stroke-dasharray="${C}" stroke-dashoffset="${off}"/>
+        </svg>
+        <div style="position:absolute;text-align:center">
+          <div style="font-size:19px;font-weight:500;color:var(--acc);font-family:var(--font-display)">${prog}%</div>
+        </div>
+      </div>
+      <div style="flex:1">
+        <div style="font-size:15px;font-weight:500;margin-bottom:2px">Tu día de hoy</div>
+        <div style="font-size:12px;color:var(--t2)">${prog===0?'¡Empieza cuando quieras!':prog<50?'Buen inicio, sigue así':prog<100?'¡Casi lo tienes!':'✅ Día completado'}</div>
+        <div style="display:flex;gap:7px;margin-top:9px;flex-wrap:wrap">
+          <button class="tb-btn" data-go="habits" style="font-size:11px;padding:5px 11px">Registrar</button>
+          <button class="tb-btn purple" data-go="stats" style="font-size:11px;padding:5px 11px">Estadísticas</button>
+        </div>
+      </div>
+    </div>
+    <div class="cl">Hábitos de hoy</div>
+    <div class="hgrid">${hCards}</div>
+    <div class="cl" style="margin-top:4px">Acciones rápidas</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">
+      ${[{g:'training_form',i:'💪',l:'Entreno'},{g:'diary_form',i:'📔',l:'Diario'},{g:'thoughts',i:'🧠',l:'Pensamientos'}].map(b=>
+        `<button style="background:var(--card);border:1px solid var(--border);border-radius:11px;padding:12px 7px;display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;box-shadow:var(--sh);font-family:var(--font-body)" data-go="${b.g}">
+          <div style="font-size:20px">${b.i}</div>
+          <div style="font-size:10px;font-weight:500;color:var(--t2);text-align:center">${b.l}</div>
+        </button>`).join('')}
+    </div>
+    <div style="display:flex;gap:8px">
+      <button style="flex:1;background:var(--card);border:1px solid var(--border);border-radius:11px;padding:11px;font-size:12px;font-weight:500;color:var(--t2);cursor:pointer;font-family:var(--font-body)" data-go="reports">📊 Informe PDF</button>
+      <button style="flex:1;background:var(--card);border:1px solid var(--border);border-radius:11px;padding:11px;font-size:12px;font-weight:500;color:var(--purple);cursor:pointer;font-family:var(--font-body)" data-go="cogn_form">🔄 Reconstrucción</button>
+    </div>
+  </div>${nav('dash')}`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// HABITS
+// ═══════════════════════════════════════════════════════════════
+function rHabits() {
+  const h = th();
+  return `<div class="tb"><div class="tb-title">⏱ Hábitos de hoy</div></div>
+  <div class="ct">${HC.map(hc => {
+    const v=h[hc.k]||0, p=pct(v,hc.g), bg=p>=100?'var(--green)':p>0?'var(--amber)':'#DDD';
+    return `<div class="card">
+      <div style="display:flex;align-items:center;gap:9px;margin-bottom:9px">
+        <span style="font-size:22px">${hc.ic}</span>
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:500">${hc.n}</div>
+          <div style="font-size:11px;color:var(--t3)">Objetivo: ${hc.g} min</div>
+        </div>
+        <div style="font-size:13px;font-weight:500;color:${p>=100?'var(--green)':p>0?'var(--amber)':'var(--t3)'}">${v} min</div>
+      </div>
+      <div style="background:#F0EFEB;border-radius:5px;height:5px;overflow:hidden;margin-bottom:9px">
+        <div style="height:5px;border-radius:5px;width:${p}%;background:${bg};transition:width .4s"></div>
+      </div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap">
+        ${[5,10,15,20,30,45,60].map(n=>`<button class="chip" data-habit="${hc.k}" data-add="${n}">+${n}m</button>`).join('')}
+        <button class="chip" data-reset="${hc.k}" style="border-style:dashed;color:var(--t3)">↩</button>
+      </div>
+    </div>`;
+  }).join('')}</div>${nav('habits')}`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TRAINING
+// ═══════════════════════════════════════════════════════════════
+function rTraining() {
+  const list = ST.trainings.slice().reverse().slice(0,25);
+  return `<div class="tb"><div class="tb-title">💪 Entrenamiento</div><button class="tb-btn" data-go="training_form">+ Nuevo</button></div>
+  <div class="ct">
+  ${!list.length ? `<div class="empty"><div class="empty-icon">🏋️</div><div class="empty-text">Sin entrenamientos aún.</div></div>` :
+  list.map(e=>`<div class="ec">
+    <div class="em">${fdate(e.date)} · ${e.type==='cardio'?'Cardio':'Fuerza'}</div>
+    <div class="et">${e.muscles&&e.muscles.length?e.muscles.join(', '):(e.cardio_type||'Entrenamiento')}</div>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:4px">
+      ${e.duration?`<span class="tag tag-b">⏱ ${e.duration} min</span>`:''}
+      ${e.intensity?`<span class="tag tag-o">💥 ${e.intensity}/10</span>`:''}
+    </div>
+    ${e.notes?`<div class="eb" style="margin-top:5px">${e.notes}</div>`:''}
+  </div>`).join('')}
+  </div>${nav('training')}`;
+}
+function rTrainingForm() {
+  const isC = ST.form.type==='cardio';
+  return `<div class="tb"><button class="tb-back" data-go="training">←</button><div class="tb-title">Nuevo entreno</div></div>
+  <div class="ct">
+    <div class="fg"><label class="fl">Tipo</label>
+      <div style="display:flex;gap:7px">
+        <button class="chip${!isC?' on':''}" data-type="strength">💪 Fuerza</button>
+        <button class="chip${isC?' on':''}" data-type="cardio">🏃 Cardio</button>
+      </div>
+    </div>
+    ${!isC?`
+    <div class="fg"><label class="fl">Músculos trabajados</label>
+      <div style="display:flex;flex-wrap:wrap;gap:5px">${MUSCLES.map(m=>`<button class="chip${ST.muscles.includes(m)?' on':''}" data-muscle="${m}">${m}</button>`).join('')}</div>
+    </div>
+    <div class="fg"><label class="fl">Ejercicios (uno por línea)</label>
+      <textarea class="ta" id="f-ex" placeholder="Press banca 4x8 60kg&#10;Dominadas 3x10">${ST.form.exercises||''}</textarea>
+    </div>`:`
+    <div class="fg"><label class="fl">Tipo de cardio</label>
+      <select class="fi" id="f-ctype">${CTYPES.map(t=>`<option>${t}</option>`).join('')}</select>
+    </div>`}
+    <div class="fg"><label class="fl">Duración (min)</label>
+      <input class="fi" type="number" id="f-dur" placeholder="60" min="1" max="300" value="${ST.form.duration||''}">
+    </div>
+    <div class="fg"><label class="fl">Intensidad: <span id="iv">${ST.form.intensity||5}</span>/10</label>
+      <input type="range" min="1" max="10" step="1" value="${ST.form.intensity||5}" id="f-int" style="width:100%;accent-color:var(--acc);margin-top:4px">
+    </div>
+    <div class="fg"><label class="fl">Notas</label>
+      <textarea class="ta" id="f-notes" placeholder="¿Cómo te has sentido?">${ST.form.notes||''}</textarea>
+    </div>
+    <button class="bp" id="save-training">Guardar entrenamiento</button>
+    <button class="bs" data-go="training">Cancelar</button>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// DIARY FORM — GUIDED + FREE
+// ═══════════════════════════════════════════════════════════════
+function rDiaryForm() {
+  const mode = ST.diaryMode;
+  return `<div class="tb"><button class="tb-back" data-go="thoughts">←</button><div class="tb-title">Nueva entrada</div></div>
+  <div class="ct">
+    <div class="dmode-tabs">
+      <button class="dmode-tab${mode==='guided'?' on':''}" data-dmode="guided">📋 Guiado</button>
+      <button class="dmode-tab${mode==='free'?' on':''}" data-dmode="free">✏️ Libre</button>
+    </div>
+    ${mode==='guided' ? rDiaryGuided() : rDiaryFree()}
+  </div>`;
+}
+
+function rDiaryGuided() {
+  const answers = ST.diaryAnswers;
+  const filledCount = DIARY_GUIDE.filter(s=>answers[s.key]&&answers[s.key].toString().trim()).length;
+  // Progress dots
+  const dots = DIARY_GUIDE.map((_,i) => {
+    const filled = answers[DIARY_GUIDE[i].key]?.toString().trim();
+    const isCurrent = i === ST.diaryStep;
+    const cl = filled ? 'done' : isCurrent ? 'current' : '';
+    return `<div class="dp-dot ${cl}"></div>`;
+  }).join('');
+
+  const steps = DIARY_GUIDE.map((s, i) => {
+    const val = answers[s.key] || '';
+    const filled = val.toString().trim().length > 0;
+    const isActive = i === ST.diaryStep;
+    const isOpen = ST.diaryOpenSteps.has(i);
+    const cl = `dguide-step${isActive?' active':''}${filled&&!isActive?' filled':''}${isOpen&&!isActive?' open':''}`;
+
+    let inputHtml = '';
+    if (s.type==='textarea') {
+      inputHtml = `<textarea class="dguide-ta" id="dg-${i}" rows="3" placeholder="${s.ph}">${val}</textarea>`;
+    } else if (s.type==='text') {
+      inputHtml = `<input class="fi" type="text" id="dg-${i}" placeholder="${s.ph}" value="${val}" style="font-size:13px">`;
+    } else if (s.type==='sergio_check') {
+      const mode_val = val;
+      inputHtml = `<div class="sergio-check-wrap">
+        <button class="sergio-btn inseguro${mode_val==='inseguro'?' on':''}" data-sergiocheck="inseguro" data-step="${i}">😔 Sergio inseguro</button>
+        <button class="sergio-btn seguro${mode_val==='seguro'?' on':''}" data-sergiocheck="seguro" data-step="${i}">💪 Sergio seguro</button>
+      </div>
+      ${mode_val?`<textarea class="dguide-ta" id="dg-${i}" rows="2" placeholder="Describe brevemente cómo actuaste..." style="margin-top:8px">${answers[s.key+'_detail']||''}</textarea>`:''}`;
+    }
+
+    const showPreview = filled && !isActive && !isOpen;
+    const previewText = s.type==='sergio_check' ? (val==='seguro'?'💪 Como el Sergio seguro':'😔 Como el Sergio inseguro') : (typeof val==='string'?val:'');
+
+    return `<div class="${cl}" data-gstep="${i}">
+      <div class="dguide-header" data-toggle-step="${i}">
+        <div class="dguide-num">${filled&&!isActive?'✓':i+1}</div>
+        <div class="dguide-q">
+          <div class="dguide-question">${s.q}</div>
+          ${!isOpen&&!isActive?`<div class="dguide-hint">${s.hint}</div>`:''}
+          ${showPreview?`<div class="dguide-preview">${previewText}</div>`:''}
+        </div>
+      </div>
+      <div class="dguide-body">
+        <div style="font-size:11px;color:var(--t3);margin-bottom:8px;line-height:1.5">${s.hint}</div>
+        ${inputHtml}
+        <div class="dguide-clear">
+          ${i < DIARY_GUIDE.length-1
+            ? `<button class="dguide-next" data-guide-next="${i}">Siguiente →</button>`
+            : `<button class="dguide-next" style="background:var(--green)" id="save-diary-guided">Guardar diario ✓</button>`}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  return `
+  <div class="diary-progress">${dots}</div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+    <div style="font-size:12px;color:var(--t3)">${filledCount}/${DIARY_GUIDE.length} preguntas respondidas</div>
+    ${filledCount>0?`<button id="save-diary-partial" style="background:none;border:none;font-size:12px;color:var(--acc);cursor:pointer;font-family:var(--font-body);text-decoration:underline">Guardar lo que hay</button>`:''}
+  </div>
+  <div class="dguide-wrap">${steps}</div>
+  <div style="height:16px"></div>`;
+}
+
+function rDiaryFree() {
+  const guides = ['¿Qué emoción ha dominado hoy?','¿Qué pensamiento se ha repetido?','¿Qué me ha activado?','¿Actué desde el Sergio seguro?','¿Qué aprendizaje me llevo?'];
+  return `<div class="fg">
+    <label class="fl">¿Cómo te sientes?</label>
+    <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px">
+      ${EMOTIONS.slice(0,6).map(e=>`<button class="ebtn${ST.emotion===e?' on':''}" data-em="${e}">${e}</button>`).join('')}
+    </div>
+  </div>
+  <div class="fg">
+    <label class="fl">Escribe libremente</label>
+    <textarea class="ta" id="f-content" style="min-height:180px" placeholder="¿Qué ha pasado hoy? ¿Cómo te has sentido?...">${ST.form.content||''}</textarea>
+    <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:8px">
+      ${guides.map(g=>`<div class="chip" data-guide="${g}" style="font-size:10px">+ ${g}</div>`).join('')}
+    </div>
+  </div>
+  <div class="fg">
+    <label class="fl">¿Qué agradeces hoy?</label>
+    <input class="fi" type="text" id="f-grateful" placeholder="Una cosa buena de hoy..." value="${ST.form.grateful||''}">
+  </div>
+  <div class="fg">
+    <label class="fl">Intención para mañana</label>
+    <input class="fi" type="text" id="f-tomorrow" placeholder="Una acción concreta..." value="${ST.form.tomorrow||''}">
+  </div>
+  <button class="bp" id="save-diary">Guardar en el diario</button>
+  <button class="bs" data-go="thoughts">Cancelar</button>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// THOUGHTS HUB
+// ═══════════════════════════════════════════════════════════════
+function rThoughts() {
+  const t = ST.ttab;
+  const newTargets = {list:'thought_form', diary:'diary_form', cogn:'cogn_form', sergio:'sergio_form'};
+  return `<div class="tb"><div class="tb-title">🧠 Mente</div><button class="tb-btn" data-go="${newTargets[t]}">+ Nuevo</button></div>
+  <div class="ct">
+    <div style="display:flex;gap:4px;margin-bottom:14px;overflow-x:auto">
+      ${[{k:'list',l:'Pensamientos'},{k:'diary',l:'📔 Diario'},{k:'cogn',l:'Reconstrucción'},{k:'sergio',l:'Sergio 💜'}].map(tb=>
+        `<button class="tab${t===tb.k?' on':''}" data-ttab="${tb.k}">${tb.l}</button>`).join('')}
+    </div>
+    ${t==='list'   ? rThoughtList()  : ''}
+    ${t==='diary'  ? rDiaryList()    : ''}
+    ${t==='cogn'   ? rCognList()     : ''}
+    ${t==='sergio' ? rSergioList()   : ''}
+  </div>${nav('thoughts')}`;
+}
+
+function rThoughtList() {
+  const list = ST.thoughts.filter(x=>x.mode==='simple').slice().reverse().slice(0,30);
+  if (!list.length) return `<div class="empty"><div class="empty-icon">💭</div><div class="empty-text">Sin registros aún.<br>Toca "+ Nuevo" para añadir uno.</div></div>`;
+  return list.map(e=>`<div class="ec">
+    <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+      <div class="em">${fdate(e.date)} · ${ftime(e.created_at)}</div>
+      ${e.intensity?`<span style="font-size:10px;background:#FFF0E8;color:var(--acc);padding:1px 7px;border-radius:9px">${e.intensity}/10</span>`:''}
+    </div>
+    <div class="et">${e.situation}</div>
+    <div class="eb">"${e.thought}"</div>
+    ${e.emotion?`<span class="tag tag-o">${e.emotion}</span>`:''}
+    ${e.alternative?`<div style="margin-top:7px;padding:7px;background:#F0FAF5;border-radius:7px;font-size:11px;color:var(--green)">💚 ${e.alternative}</div>`:''}
+  </div>`).join('');
+}
+
+function rDiaryList() {
+  const list = ST.diaries.slice().reverse().slice(0,30);
+  if (!list.length) return `<div class="empty"><div class="empty-icon">📝</div><div class="empty-text">Tu diario está vacío.<br>Toca "+ Nuevo" para escribir.</div></div>`;
+  return list.map(e => {
+    // Guided entries have a structured summary
+    const isGuided = e.guided && e.guided_answers;
+    const ga = isGuided ? e.guided_answers : null;
+    return `<div class="ec">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <div class="em">${fdate(e.date)} · ${ftime(e.created_at)}</div>
+        <div style="display:flex;align-items:center;gap:6px">
+          ${isGuided?`<span style="font-size:9px;background:#F0FAF5;color:var(--green);padding:2px 6px;border-radius:6px;font-weight:500">Guiado</span>`:''}
+          ${e.emotion?`<span style="font-size:17px">${e.emotion.split(' ')[0]}</span>`:''}
+        </div>
+      </div>
+      ${isGuided && ga ? `
+        ${ga.what_happened?`<div class="eb" style="margin-bottom:5px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${ga.what_happened}</div>`:''}
+        ${ga.sergio_mode?`<span class="tag ${ga.sergio_mode==='seguro'?'tag-g':'tag-o'}">${ga.sergio_mode==='seguro'?'💪 Sergio seguro':'😔 Sergio inseguro'}</span>`:''}
+        ${ga.learning?`<div style="margin-top:7px;padding:7px;background:#FFF8F5;border-radius:7px;font-size:11px;color:var(--acc);font-family:var(--font-display);font-style:italic">"${ga.learning}"</div>`:''}
+        ${ga.tomorrow_action?`<div style="font-size:11px;color:var(--blue);margin-top:5px">🌅 ${ga.tomorrow_action}</div>`:''}
+      ` : `
+        ${e.grateful?`<div style="font-size:11px;color:var(--green);margin-bottom:3px">🙏 ${e.grateful}</div>`:''}
+        <div class="eb" style="display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden">${e.content||''}</div>
+        ${e.tomorrow?`<div style="font-size:11px;color:var(--blue);margin-top:5px">🌅 ${e.tomorrow}</div>`:''}
+      `}
+    </div>`;
+  }).join('');
+}
+
+function rCognList() {
+  const list = ST.thoughts.filter(x=>x.mode==='cogn').slice().reverse().slice(0,20);
+  return `<div class="ibox ibox-p" style="margin-bottom:12px">
+    <div style="font-weight:500;margin-bottom:3px">🔄 Reconstrucción cognitiva</div>
+    <div>Transforma narrativas limitantes en relatos más justos y compasivos.</div>
+    <button style="margin-top:9px;background:var(--purple);color:#fff;border:none;padding:7px 14px;border-radius:20px;font-size:12px;cursor:pointer;font-family:var(--font-body)" data-go="cogn_form">Iniciar proceso →</button>
+  </div>
+  ${!list.length?`<div style="text-align:center;padding:20px;color:var(--t3)"><div style="font-size:28px;margin-bottom:6px">🔄</div><div style="font-size:12px">Aún no hay reconstrucciones.</div></div>`:
+  list.map(e=>`<div class="ec" style="border-left:3px solid var(--purple)">
+    <div class="em">${fdate(e.date)}</div>
+    ${e.narrative_old?`<div style="text-decoration:line-through;color:#A02020;font-size:11px;margin-bottom:3px;opacity:.7">${e.narrative_old.slice(0,80)}${e.narrative_old.length>80?'...':''}</div>`:''}
+    ${e.narrative_new?`<div style="color:var(--green);font-size:11px;font-weight:500">→ ${e.narrative_new.slice(0,80)}${e.narrative_new.length>80?'...':''}</div>`:''}
+    ${e.bias?`<span class="tag tag-p">${BIASES.find(b=>b.k===e.bias)?.l||e.bias}</span>`:''}
+  </div>`).join('')}`;
+}
+
+function rSergioList() {
+  const list = ST.sergio.slice().reverse().slice(0,20);
+  return `<div style="background:linear-gradient(135deg,#F5F0FF,#EDE6FF);border:1px solid #C8B8F0;border-radius:11px;padding:13px;margin-bottom:12px">
+    <div style="font-size:13px;font-weight:500;color:var(--purple);margin-bottom:3px;font-family:var(--font-display)">¿Qué haría el Sergio seguro?</div>
+    ${list.length?`<div style="font-size:24px;font-weight:500;color:var(--purple);margin:5px 0;font-family:var(--font-display)">${list.length}<span style="font-size:12px;color:#7A5AAA;font-weight:400"> momentos registrados</span></div>`:''}
+  </div>
+  ${!list.length?`<div style="text-align:center;padding:20px;color:var(--t3)"><div style="font-size:28px;margin-bottom:6px">🌟</div><div style="font-size:12px">La próxima vez que frenes un impulso, anótalo aquí.</div></div>`:
+  list.map(e=>`<div class="ec" style="border-left:3px solid var(--purple)">
+    <div class="em">${fdate(e.date)}</div>
+    <div class="et">${e.situation}</div>
+    ${e.impulse?`<div class="eb">Impulso: ${e.impulse}</div>`:''}
+    ${e.secure_action?`<div style="margin-top:7px;padding:7px;background:linear-gradient(135deg,#F5F0FF,#EDE6FF);border-radius:7px;font-size:11px;color:var(--purple)">💜 ${e.secure_action}</div>`:''}
+    ${e.result?`<div style="font-size:11px;color:var(--green);margin-top:4px">✅ ${e.result}</div>`:''}
+  </div>`).join('')}`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// THOUGHT FORM
+// ═══════════════════════════════════════════════════════════════
+function rThoughtForm() {
+  return `<div class="tb"><button class="tb-back" data-go="thoughts">←</button><div class="tb-title">Registro de pensamiento</div></div>
+  <div class="ct">
+    <div class="ibox ibox-o">💡 Observa el pensamiento sin juzgarlo. Estás entrenando tu mente.</div>
+    <div class="fg"><label class="fl">Situación que lo activó</label><input class="fi" type="text" id="f-sit" placeholder="¿Qué pasó?" value="${ST.form.situation||''}"></div>
+    <div class="fg"><label class="fl">Pensamiento automático</label><textarea class="ta" id="f-thought" placeholder="Lo primero que pensé...">${ST.form.thought||''}</textarea></div>
+    <div class="fg"><label class="fl">Emoción</label><div style="display:flex;flex-wrap:wrap;gap:5px">${EMOTIONS.map(e=>`<button class="ebtn${ST.emotion===e?' on':''}" data-em="${e}">${e}</button>`).join('')}</div></div>
+    <div class="fg"><label class="fl">Intensidad: <span id="iv">${ST.form.intensity||5}</span>/10</label>
+      <input type="range" min="1" max="10" step="1" value="${ST.form.intensity||5}" id="f-int" style="width:100%;accent-color:var(--purple);margin-top:4px">
+    </div>
+    <div class="fg"><label class="fl">Evidencia a favor</label><textarea class="ta" id="f-evfor" placeholder="Lo que confirma ese pensamiento...">${ST.form.evidence_for||''}</textarea></div>
+    <div class="fg"><label class="fl">Evidencia en contra</label><textarea class="ta" id="f-evag" placeholder="Lo que lo contradice...">${ST.form.evidence_against||''}</textarea></div>
+    <div class="fg"><label class="fl">Interpretación alternativa</label><textarea class="ta" id="f-alt" placeholder="Una lectura más equilibrada...">${ST.form.alternative||''}</textarea></div>
+    <button class="bp" id="save-thought">Guardar registro</button>
+    <button class="bs" data-go="thoughts">Cancelar</button>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SERGIO FORM
+// ═══════════════════════════════════════════════════════════════
+function rSergioForm() {
+  return `<div class="tb"><button class="tb-back" data-go="thoughts">←</button><div class="tb-title">Momento Sergio 💜</div></div>
+  <div class="ct">
+    <div style="background:linear-gradient(135deg,#F5F0FF,#EDE6FF);border:1px solid #C8B8F0;border-radius:11px;padding:13px;margin-bottom:14px;text-align:center">
+      <div style="font-size:16px;font-weight:500;color:var(--purple);line-height:1.4;font-family:var(--font-display)">¿Qué haría ahora<br>el Sergio seguro de sí mismo?</div>
+    </div>
+    <div class="fg"><label class="fl">Situación</label><input class="fi" type="text" id="f-sit" placeholder="Describe la situación" value="${ST.form.situation||''}"></div>
+    <div class="fg"><label class="fl">Impulso que tuviste</label><textarea class="ta" id="f-impulse" placeholder="Ganas de reaccionar, escapar, controlar...">${ST.form.impulse||''}</textarea></div>
+    <div class="fg"><label class="fl">Emoción detrás</label><div style="display:flex;flex-wrap:wrap;gap:5px">${EMOTIONS.slice(0,8).map(e=>`<button class="ebtn${ST.emotion===e?' on':''}" data-em="${e}">${e}</button>`).join('')}</div></div>
+    <div class="fg"><label class="fl">¿Qué necesitabas realmente?</label><input class="fi" type="text" id="f-need" placeholder="Ej: seguridad, conexión..." value="${ST.form.need||''}"></div>
+    <div class="fg"><label class="fl">¿Qué haría el Sergio seguro?</label><textarea class="ta" id="f-secure" style="min-height:90px" placeholder="La acción desde la calma y el amor propio...">${ST.form.secure_action||''}</textarea></div>
+    <div class="fg"><label class="fl">¿Qué hiciste finalmente?</label><input class="fi" type="text" id="f-actual" placeholder="Lo que decidiste hacer" value="${ST.form.actual_action||''}"></div>
+    <div class="fg"><label class="fl">Resultado y aprendizaje</label><textarea class="ta" id="f-result" placeholder="¿Qué pasó? ¿Qué aprendiste?">${ST.form.result||''}</textarea></div>
+    <button class="bp purple" id="save-sergio">Guardar momento Sergio</button>
+    <button class="bs" data-go="thoughts">Cancelar</button>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// COGNITIVE RECONSTRUCTION
+// ═══════════════════════════════════════════════════════════════
+function rCognForm() {
+  const step=ST.cstep, total=COGN.length, cfg=COGN[step], cf=ST.cform;
+  const p = Math.round((step/total)*100);
+  let body = '';
+  if (cfg.type==='text'||cfg.type==='textarea') {
+    body = `<textarea class="ta" id="cf" style="min-height:${cfg.type==='textarea'?110:90}px" placeholder="${cfg.ph}">${cf[cfg.f]||''}</textarea>`;
+    if (step===1 && cf.narrative_old) body += `<div class="ibox ibox-o" style="margin-top:10px">💡 ¿Qué le dirías a un amigo que pensara esto?</div>`;
+  } else if (cfg.type==='emotion_intensity') {
+    body = `<div class="fg"><label class="fl">Emoción principal</label><div style="display:flex;flex-wrap:wrap;gap:5px">${EMOTIONS.map(e=>`<button class="ebtn${cf.emotion===e?' on':''}" data-cem="${e}">${e}</button>`).join('')}</div></div>
+    <div class="fg" style="margin-top:11px"><label class="fl">Intensidad: <span id="cv">${cf.intensity||6}</span>/10</label>
+    <input type="range" min="1" max="10" step="1" value="${cf.intensity||6}" id="cf-int" style="width:100%;accent-color:var(--purple);margin-top:4px"></div>`;
+  } else if (cfg.type==='evidence') {
+    body = `<div class="fg"><label class="fl">A favor — hechos concretos</label><textarea class="ta" id="cf-for" placeholder="Solo hechos observables...">${cf.evidence_for||''}</textarea></div>
+    <div class="fg"><label class="fl">En contra — ¿qué contradice ese relato?</label><textarea class="ta" id="cf-ag" placeholder="Momentos donde eso NO fue así...">${cf.evidence_against||''}</textarea></div>
+    <div class="ibox ibox-p">💡 Si la evidencia en contra supera a la de favor, tu narrativa puede ser más frágil de lo que parece.</div>`;
+  } else if (cfg.type==='bias_select') {
+    body = `<div style="display:flex;flex-direction:column;gap:7px">${BIASES.map(b=>`
+      <button class="rti${cf.bias===b.k?' on':''}" data-bias="${b.k}">
+        <div><div style="font-size:12px;font-weight:500">${b.l}</div><div style="font-size:10px;color:var(--t3);margin-top:1px">${b.d}</div></div>
+        ${cf.bias===b.k?'<div style="color:var(--purple)">✓</div>':''}
+      </button>`).join('')}</div>
+    <div class="ibox ibox-p" style="margin-top:10px">💡 Reconocer el sesgo es lo que hace el Sergio seguro.</div>`;
+  } else if (cfg.type==='narrative_builder') {
+    const bb = BIASES.find(b=>b.k===cf.bias);
+    body = `${cf.narrative_old?`<div style="margin-bottom:10px"><div style="font-size:10px;color:var(--t3);margin-bottom:3px">Narrativa anterior</div><div class="nar-old">${cf.narrative_old}</div></div>`:''}
+    ${bb?`<div class="ibox ibox-o" style="margin-bottom:10px">🔍 Sesgo: <strong>${bb.l}</strong> — ${bb.d}</div>`:''}
+    <div class="ibox ibox-t" style="margin-bottom:10px">💡 No tiene que ser positiva. Tiene que ser más <strong>justa y compasiva</strong>.</div>
+    <textarea class="ta" id="cf" style="min-height:110px" placeholder="Una lectura más equilibrada...">${cf.narrative_new||''}</textarea>
+    ${cf.narrative_new?`<div class="nar-new" style="margin-top:8px">✨ ${cf.narrative_new}</div>`:''}`;
+  }
+  return `<div class="tb"><button class="tb-back" data-go="thoughts">←</button><div class="tb-title">Reconstrucción cognitiva</div></div>
+  <div class="ct">
+    <div class="cpbar"><div class="cpfill" style="width:${p}%"></div></div>
+    <div class="cstep">
+      <div class="cnum">${cfg.num}</div>
+      <div class="ctitle">${cfg.title}</div>
+      <div class="chint">${cfg.hint}</div>
+      ${body}
+    </div>
+    <div style="display:flex;gap:8px;margin-top:18px">
+      ${step>0?`<button class="cn-prev" id="cp">← Atrás</button>`:''}
+      <button class="cn-next" id="cn" style="${step===0?'flex:1':''}">${step===total-1?'💜 Guardar':'Continuar →'}</button>
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// STATS
+// ═══════════════════════════════════════════════════════════════
+function rStats() {
+  const str=calcStreak(), totalD=Object.keys(ST.habits).length, totalSer=ST.sergio.length, totalCogn=ST.thoughts.filter(t=>t.mode==='cogn').length;
+  const now = new Date(td()+'T12:00:00');
+  const calDays = [];
+  for (let i=27; i>=0; i--) {
+    const d=new Date(now); d.setDate(d.getDate()-i);
+    const k=d.toISOString().split('T')[0], h=ST.habits[k]||{};
+    const p=HC.reduce((s,c)=>s+Math.min(h[c.k]||0,c.g),0)/HC.reduce((s,c)=>s+c.g,0);
+    calDays.push({k, p, label:d.getDate()});
+  }
+  return `<div class="tb"><div class="tb-title">📊 Estadísticas</div><button class="tb-btn green" data-go="reports">Informe</button></div>
+  <div class="ct">
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-num" style="color:var(--acc)">${str}</div><div class="stat-lbl">Racha actual</div></div>
+      <div class="stat-card"><div class="stat-num" style="color:var(--green)">${totalD}</div><div class="stat-lbl">Días con datos</div></div>
+      <div class="stat-card"><div class="stat-num" style="color:var(--purple)">${totalSer}</div><div class="stat-lbl">Mom. Sergio</div></div>
+    </div>
+    <div class="card">
+      <div class="cl">Últimos 28 días</div>
+      <div style="display:flex;justify-content:space-around;margin-bottom:5px">
+        ${['L','M','X','J','V','S','D'].map(d=>`<div style="font-size:9px;color:var(--t3);width:14%;text-align:center">${d}</div>`).join('')}
+      </div>
+      <div class="scal">${calDays.map(d=>{const cl=d.p>=1?'done':d.p>0?'partial':'empty';return `<div class="sday ${cl}" title="${d.k}">${d.label}</div>`;}).join('')}</div>
+      <div style="display:flex;gap:12px;font-size:10px;color:var(--t3)">
+        <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:2px;background:var(--acc);display:inline-block"></span>Completado</span>
+        <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:2px;background:var(--amber);display:inline-block"></span>Parcial</span>
+        <span style="display:flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:2px;background:var(--border);display:inline-block"></span>Sin datos</span>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tab${ST.stab==='habits'?' on':''}" data-stab="habits">Hábitos</button>
+      <button class="tab${ST.stab==='emotions'?' on':''}" data-stab="emotions">Emociones</button>
+      <button class="tab${ST.stab==='training'?' on':''}" data-stab="training">Músculos</button>
+    </div>
+    ${ST.stab==='habits'?`<div class="card"><div class="cl">Minutos totales por hábito</div><div style="position:relative;height:220px"><canvas id="ch-habits" role="img" aria-label="Minutos por hábito">Minutos acumulados por hábito.</canvas></div></div>`:''}
+    ${ST.stab==='emotions'?`<div class="card"><div class="cl">Emociones en el diario</div><div style="position:relative;height:220px"><canvas id="ch-emotions" role="img" aria-label="Distribución de emociones">Frecuencia de emociones.</canvas></div></div>`:''}
+    ${ST.stab==='training'?`<div class="card"><div class="cl">Músculos más trabajados</div><div style="position:relative;height:220px"><canvas id="ch-muscles" role="img" aria-label="Músculos trabajados">Grupos musculares más entrenados.</canvas></div></div>`:''}
+    <div class="card" style="margin-top:2px">
+      <div class="cl">Reconstrucciones cognitivas</div>
+      <div style="display:flex;align-items:center;gap:14px">
+        <div style="text-align:center"><div style="font-size:28px;font-weight:500;color:var(--purple);font-family:var(--font-display)">${totalCogn}</div><div style="font-size:10px;color:var(--t3)">completadas</div></div>
+        <div style="flex:1;font-size:12px;color:var(--t2);line-height:1.6">Cada reconstrucción es un momento en que has elegido observar tu mente en lugar de reaccionar desde ella.</div>
+      </div>
+    </div>
+  </div>${nav('stats')}`;
+}
+
+function drawCharts() {
+  if (!window.Chart) return;
+  const allH = Object.values(ST.habits);
+  if (ST.stab==='habits') {
+    const totals = HC.map(c=>allH.reduce((s,h)=>s+(h[c.k]||0),0));
+    safeChart('ch-habits', {type:'bar', data:{labels:HC.map(c=>c.n), datasets:[{label:'Minutos', data:totals, backgroundColor:'#C85A2E', borderRadius:6}]},
+      options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true, ticks:{font:{size:10}}}, x:{ticks:{font:{size:10}}}}}});
+  }
+  if (ST.stab==='emotions') {
+    const counts = {};
+    ST.diaries.forEach(d => { if (d.emotion) { const k=d.emotion.split(' ').slice(1).join(' ')||d.emotion; counts[k]=(counts[k]||0)+1; }});
+    const entries = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,7);
+    const el = document.getElementById('ch-emotions');
+    if (!entries.length) { if(el) el.parentElement.innerHTML='<div style="text-align:center;padding:30px;color:var(--t3);font-size:12px">Sin emociones registradas aún.</div>'; return; }
+    safeChart('ch-emotions', {type:'doughnut', data:{labels:entries.map(e=>e[0]), datasets:[{data:entries.map(e=>e[1]), backgroundColor:['#C85A2E','#2E7D5A','#2655A0','#5A3A8A','#B87020','#1A7A7A','#A03060'], borderWidth:0}]},
+      options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'right', labels:{font:{size:10}, boxWidth:10}}}}});
+  }
+  if (ST.stab==='training') {
+    const counts = {};
+    ST.trainings.forEach(t=>(t.muscles||[]).forEach(m=>{counts[m]=(counts[m]||0)+1;}));
+    const entries = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,8);
+    const el = document.getElementById('ch-muscles');
+    if (!entries.length) { if(el) el.parentElement.innerHTML='<div style="text-align:center;padding:30px;color:var(--t3);font-size:12px">Sin datos de entrenamiento aún.</div>'; return; }
+    safeChart('ch-muscles', {type:'bar', data:{labels:entries.map(e=>e[0]), datasets:[{data:entries.map(e=>e[1]), backgroundColor:'#5A3A8A', borderRadius:5}]},
+      options:{indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{x:{beginAtZero:true, ticks:{font:{size:10}, stepSize:1}}, y:{ticks:{font:{size:10}}}}}});
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// REPORTS
+// ═══════════════════════════════════════════════════════════════
+function rReports() {
+  if (ST.rgen) return rReportView();
+  if (!ST.rfrom) setPreset('week');
+  const secs=ST.rsecs, from=ST.rfrom, to=ST.rto;
+  const fromD=new Date(from+'T12:00:00'), toD=new Date(to+'T12:00:00');
+  const days=Math.max(1,Math.round((toD-fromD)/86400000)+1);
+  let dwd=0; for(let d=new Date(fromD);d<=toD;d.setDate(d.getDate()+1)){const k=d.toISOString().split('T')[0];if(ST.habits[k]&&Object.values(ST.habits[k]).some(v=>v>0))dwd++;}
+  const ft=ST.trainings.filter(e=>e.date>=from&&e.date<=to);
+  const fth=ST.thoughts.filter(e=>e.date>=from&&e.date<=to);
+  const fs=ST.sergio.filter(e=>e.date>=from&&e.date<=to);
+  return `<div class="tb"><div class="tb-title">📊 Informe personal</div></div>
+  <div class="ct">
+    <div class="card">
+      <div class="cl">Período</div>
+      <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:11px">
+        ${[{k:'today',l:'Hoy'},{k:'week',l:'Esta semana'},{k:'month',l:'Este mes'},{k:'custom',l:'Fechas'}].map(p=>
+          `<button class="chip${ST.rpreset===p.k?' on':''}" data-preset="${p.k}">${p.l}</button>`).join('')}
+      </div>
+      ${ST.rpreset==='custom'?`<div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">
+        <div><label class="fl">Desde</label><input class="fi" type="date" id="r-from" value="${from}" max="${isoToday()}"></div>
+        <div><label class="fl">Hasta</label><input class="fi" type="date" id="r-to" value="${to}" max="${isoToday()}"></div>
+      </div>`:`<div style="font-size:12px;color:var(--t2)">📅 ${fdate(from)} → ${fdate(to)}</div>`}
+    </div>
+    <div class="card">
+      <div class="cl">¿Qué incluir?</div>
+      ${RSECS.map(rs=>`<div class="rti${secs[rs.k]?' on':''}" data-tsec="${rs.k}">
+        <div style="display:flex;align-items:center;gap:9px">
+          <span style="font-size:18px">${rs.ic}</span>
+          <div><div style="font-size:13px;font-weight:500">${rs.n}</div><div style="font-size:10px;color:var(--t3)">${rs.d}</div></div>
+        </div>
+        <div class="tpill${secs[rs.k]?' on':''}"><div class="tdot"></div></div>
+      </div>`).join('')}
+    </div>
+    <div class="card"><div class="cl">Vista previa</div>
+      <div>
+        ${[['Período',`${days} día${days!==1?'s':''}`], secs.habits?['Días con hábitos',`${dwd}/${days}`]:null, secs.training?['Entrenamientos',ft.length]:null, secs.thoughts?['Pensamientos',fth.length]:null, secs.sergio?['Momentos Sergio',fs.length]:null]
+          .filter(Boolean).map((r,i,a)=>`<div style="display:flex;justify-content:space-between;font-size:12px;padding:7px 0;${i<a.length-1?'border-bottom:1px solid var(--border)':''}"><span style="color:var(--t2)">${r[0]}</span><span style="font-weight:500">${r[1]}</span></div>`).join('')}
+      </div>
+    </div>
+    <button class="bp" id="gen-report" style="display:flex;align-items:center;justify-content:center;gap:7px">📄 Generar informe</button>
+  </div>${nav('stats')}`;
+}
+
+function rReportView() {
+  const from=ST.rfrom, to=ST.rto;
+  const fromD=new Date(from+'T12:00:00'), toD=new Date(to+'T12:00:00');
+  const days=Math.max(1,Math.round((toD-fromD)/86400000)+1);
+  const secs=ST.rsecs, hT={};
+  HC.forEach(c=>hT[c.k]=0);
+  let totalMins=0, dwd=0;
+  for(let d=new Date(fromD);d<=toD;d.setDate(d.getDate()+1)){
+    const k=d.toISOString().split('T')[0], h=ST.habits[k]||{};
+    if(Object.values(h).some(v=>v>0))dwd++;
+    HC.forEach(c=>{const m=h[c.k]||0;hT[c.k]+=m;totalMins+=m;});
+  }
+  const ft=ST.trainings.filter(e=>e.date>=from&&e.date<=to);
+  const fth=ST.thoughts.filter(e=>e.date>=from&&e.date<=to);
+  const fc=fth.filter(t=>t.mode==='cogn');
+  const fs=ST.sergio.filter(e=>e.date>=from&&e.date<=to);
+  const fd=ST.diaries.filter(e=>e.date>=from&&e.date<=to);
+  const comp=Math.round(dwd/days*100);
+  return `<div class="tb"><button class="tb-back" id="back-rpt">←</button><div class="tb-title">Informe generado</div></div>
+  <div class="ct">
+    <div class="pdf-frame"><div class="pdf-page">
+      <div class="pdf-h"><div class="pdf-t">Informe personal</div><div class="pdf-s">${fdate(from)} — ${fdate(to)} · ${days} días</div></div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:16px">
+        <div style="background:#FFF8F5;border-radius:9px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:500;color:var(--acc);font-family:var(--font-display)">${comp}%</div><div style="font-size:9px;color:var(--t3);margin-top:2px">Cumplimiento</div></div>
+        <div style="background:#F0FAF5;border-radius:9px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:500;color:var(--green);font-family:var(--font-display)">${Math.round(totalMins/60)}h</div><div style="font-size:9px;color:var(--t3);margin-top:2px">Tiempo total</div></div>
+        <div style="background:#F5F0FF;border-radius:9px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:500;color:var(--purple);font-family:var(--font-display)">${fs.length}</div><div style="font-size:9px;color:var(--t3);margin-top:2px">Mom. Sergio</div></div>
+      </div>
+      ${secs.habits?`<div class="pdf-sec"><div class="pdf-st">⏱ Hábitos</div>
+        ${HC.map(c=>{const m=hT[c.k],g=c.g*days,p=Math.min(100,Math.round(m/g*100));
+        return `<div class="pbar"><span style="width:76px;color:var(--t2)">${c.ic} ${c.n}</span><div class="pbtrack"><div class="pbfill" style="width:${p}%;background:${p>=70?'#2E7D5A':p>=40?'#B87020':'#E8915A'}"></div></div><span style="min-width:30px;text-align:right;color:var(--t2)">${p}%</span></div>`;}).join('')}
+      </div>`:''}
+      ${secs.training&&ft.length?`<div class="pdf-sec"><div class="pdf-st">💪 Entrenamiento (${ft.length} sesiones)</div>
+        ${ft.slice(0,4).map(e=>`<div class="pe"><div class="pe-d">${fdate(e.date)}</div><div>${e.muscles&&e.muscles.length?e.muscles.join(', '):(e.cardio_type||'Entreno')}${e.duration?' · '+e.duration+' min':''}</div></div>`).join('')}
+        <div style="position:relative;height:110px;margin-top:8px"><canvas id="rpt-tr" role="img" aria-label="Músculos">Distribución de músculos.</canvas></div>
+      </div>`:''}
+      ${secs.thoughts&&fth.length?`<div class="pdf-sec"><div class="pdf-st">🧠 Pensamientos (${fth.length} registros, ${fc.length} reconstrucciones)</div>
+        ${fc.slice(0,2).map(e=>`<div class="pe" style="border-left-color:var(--purple)">
+          <div class="pe-d">${fdate(e.date)}</div>
+          ${e.narrative_old?`<div style="text-decoration:line-through;color:#A02020;font-size:10px">${e.narrative_old.slice(0,65)}...</div>`:''}
+          ${e.narrative_new?`<div style="color:var(--green);font-size:10px">→ ${e.narrative_new.slice(0,65)}...</div>`:''}
+        </div>`).join('')}
+      </div>`:''}
+      ${secs.sergio&&fs.length?`<div class="pdf-sec"><div class="pdf-st">💜 Sergio (${fs.length} momentos)</div>
+        ${fs.slice(0,3).map(e=>`<div class="pe" style="border-left-color:var(--purple)"><div class="pe-d">${fdate(e.date)}</div><div>${e.situation.slice(0,70)}${e.situation.length>70?'...':''}</div>${e.secure_action?`<div style="color:var(--purple);font-size:10px;margin-top:1px">→ ${e.secure_action.slice(0,55)}...</div>`:''}</div>`).join('')}
+      </div>`:''}
+      ${secs.diary&&fd.length?`<div class="pdf-sec"><div class="pdf-st">📔 Diario (${fd.length} entradas)</div>
+        <div style="font-size:11px;color:var(--t2)">Emociones: ${[...new Set(fd.filter(d=>d.emotion).map(d=>d.emotion.split(' ')[0]))].join(' ')||'—'}</div>
+      </div>`:''}
+      <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);font-size:10px;color:var(--t3);text-align:center">Informe personal y confidencial. No sustituye orientación profesional.</div>
+    </div></div>
+    <button class="bp green" id="dl-pdf" style="margin-top:12px;display:flex;align-items:center;justify-content:center;gap:7px">⬇ Descargar como PDF</button>
+    <button class="bs" id="back-rpt">← Modificar informe</button>
+  </div>${nav('stats')}`;
+}
+
+function drawReportChart() {
+  if (!window.Chart) return;
+  const from=ST.rfrom, to=ST.rto;
+  const counts={};
+  ST.trainings.filter(e=>e.date>=from&&e.date<=to).forEach(t=>(t.muscles||[]).forEach(m=>{counts[m]=(counts[m]||0)+1;}));
+  const entries=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  if (!entries.length) return;
+  safeChart('rpt-tr', {type:'bar', data:{labels:entries.map(e=>e[0]), datasets:[{data:entries.map(e=>e[1]), backgroundColor:'#5A3A8A', borderRadius:4}]},
+    options:{responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true, ticks:{font:{size:9}, stepSize:1}}, x:{ticks:{font:{size:9}}}}}});
+}
+
+// ═══════════════════════════════════════════════════════════════
+// SAVE GUIDED DIARY
+// ═══════════════════════════════════════════════════════════════
+function saveGuidedDiary() {
+  const ga = {...ST.diaryAnswers};
+  // Collect any currently open textarea
+  DIARY_GUIDE.forEach((s, i) => {
+    const el = document.getElementById(`dg-${i}`);
+    if (el) ga[s.key] = el.value;
+    if (s.type==='sergio_check') {
+      const detail = document.getElementById(`dg-${i}`);
+      if (detail) ga[s.key+'_detail'] = detail.value;
+    }
+  });
+  const hasContent = Object.values(ga).some(v=>v&&v.toString().trim());
+  if (!hasContent) { toast('Responde al menos una pregunta'); return; }
+  // Build a readable content summary for the card preview
+  const lines = [];
+  if (ga.what_happened) lines.push(ga.what_happened);
+  if (ga.feelings)      lines.push('Sentí: '+ga.feelings);
+  const content = lines.join('\n') || '(entrada guiada)';
+  const entry = {
+    id: Date.now(),
+    date: td(),
+    created_at: new Date().toISOString(),
+    emotion: '',
+    content,
+    guided: true,
+    guided_answers: ga,
+    grateful: '',
+    tomorrow: ga.tomorrow_action || '',
+  };
+  ST.diaries.push(entry);
+  persist('diaries');
+  toast('Diario guardado ✓');
+  ST.ttab = 'diary';
+  go('thoughts');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// EVENTS
+// ═══════════════════════════════════════════════════════════════
+function attachAll() {
+  const q = (sel, fn) => document.querySelectorAll(sel).forEach(el=>el.addEventListener('click', ()=>fn(el)));
+
+  q('[data-nav]',  el=>go(el.dataset.nav));
+  q('[data-go]',   el=>go(el.dataset.go));
+  q('[data-ttab]', el=>{ST.ttab=el.dataset.ttab; render();});
+  q('[data-stab]', el=>{ST.stab=el.dataset.stab; render();});
+  q('#back-rpt',   ()=>{ST.rgen=false; render();});
+
+  // Habit chips
+  q('[data-habit]', el=>{const k=el.dataset.habit,a=parseInt(el.dataset.add)||0;setH(k,(th()[k]||0)+a);toast(`+${a} min ✓`);render();});
+  q('[data-reset]', el=>{setH(el.dataset.reset,0);render();});
+
+  // Training type/muscles
+  q('[data-type]',   el=>{ST.form.type=el.dataset.type;render();});
+  q('[data-muscle]', el=>{const m=el.dataset.muscle;ST.muscles.includes(m)?ST.muscles=ST.muscles.filter(x=>x!==m):ST.muscles.push(m);render();});
+
+  // Emotions
+  q('[data-em]',  el=>{ST.emotion=el.dataset.em;render();});
+
+  // Diary mode toggle
+  q('[data-dmode]', el=>{ST.diaryMode=el.dataset.dmode;render();});
+
+  // Diary guide: toggle step accordion
+  q('[data-toggle-step]', el=>{
+    const i = parseInt(el.dataset.toggleStep);
+    if (ST.diaryOpenSteps.has(i)) ST.diaryOpenSteps.delete(i);
+    else ST.diaryOpenSteps.add(i);
+    render();
+  });
+
+  // Diary guide: Next button — saves current textarea and advances
+  q('[data-guide-next]', el=>{
+    const i = parseInt(el.dataset.guideNext);
+    const s = DIARY_GUIDE[i];
+    const fieldEl = document.getElementById(`dg-${i}`);
+    if (fieldEl) ST.diaryAnswers[s.key] = fieldEl.value;
+    if (s.type==='sergio_check') {
+      const detailEl = document.getElementById(`dg-${i}`);
+      if (detailEl) ST.diaryAnswers[s.key+'_detail'] = detailEl.value;
+    }
+    ST.diaryStep = i+1;
+    ST.diaryOpenSteps = new Set([i+1]);
+    render();
+    // Scroll to new active step
+    setTimeout(()=>{const el=document.querySelector('.dguide-step.active');if(el)el.scrollIntoView({behavior:'smooth',block:'start'});},50);
+  });
+
+  // Sergio check buttons in diary guide
+  q('[data-sergiocheck]', el=>{
+    const i = parseInt(el.dataset.step);
+    const s = DIARY_GUIDE[i];
+    ST.diaryAnswers[s.key] = el.dataset.sergiocheck;
+    render();
+  });
+
+  // Save guided diary (final step button)
+  const sdg = document.getElementById('save-diary-guided');
+  if (sdg) sdg.onclick = () => {
+    // Collect final step
+    const lastIdx = DIARY_GUIDE.length-1;
+    const lastEl = document.getElementById(`dg-${lastIdx}`);
+    if (lastEl) ST.diaryAnswers[DIARY_GUIDE[lastIdx].key] = lastEl.value;
+    saveGuidedDiary();
+  };
+
+  // Save partial guided diary
+  const sdp = document.getElementById('save-diary-partial');
+  if (sdp) sdp.onclick = () => {
+    // Collect any open fields
+    DIARY_GUIDE.forEach((s,i)=>{const el=document.getElementById(`dg-${i}`);if(el)ST.diaryAnswers[s.key]=el.value;});
+    saveGuidedDiary();
+  };
+
+  // Diary free mode guide pills
+  q('[data-guide]', el=>{const ta=document.getElementById('f-content');if(ta){ta.value+=(ta.value?'\n\n':'')+el.dataset.guide+'\n';ta.focus();}});
+
+  // Sliders
+  const intSlider = document.getElementById('f-int');
+  if (intSlider) intSlider.oninput = ()=>{const v=document.getElementById('iv');if(v)v.textContent=intSlider.value;};
+
+  // Report
+  q('[data-preset]', el=>{setPreset(el.dataset.preset);render();});
+  const rf=document.getElementById('r-from'), rt=document.getElementById('r-to');
+  if (rf) rf.onchange=()=>{ST.rfrom=rf.value;render();};
+  if (rt) rt.onchange=()=>{ST.rto=rt.value;render();};
+  q('[data-tsec]', el=>{ST.rsecs[el.dataset.tsec]=!ST.rsecs[el.dataset.tsec];render();});
+  const genBtn=document.getElementById('gen-report');
+  if (genBtn) genBtn.onclick=()=>{if(!Object.values(ST.rsecs).some(Boolean)){toast('Selecciona al menos una sección');return;}ST.rgen=true;render();};
+  const dlBtn=document.getElementById('dl-pdf');
+  if (dlBtn) dlBtn.onclick=()=>{
+    const frame=document.querySelector('.pdf-frame');if(!frame)return;
+    const w=window.open('','_blank');if(!w){toast('Permite ventanas emergentes para descargar');return;}
+    w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Informe Personal</title><style>body{font-family:sans-serif;padding:28px;max-width:680px;margin:0 auto;color:#1A1917}.pdf-h{border-bottom:2px solid #C85A2E;padding-bottom:14px;margin-bottom:16px}.pdf-t{font-size:20px;font-weight:500;color:#C85A2E}.pdf-s{font-size:11px;color:#A09E98}.pdf-sec{margin-bottom:16px}.pdf-st{font-size:11px;font-weight:500;background:#F7F5F0;padding:5px 9px;border-radius:5px;margin-bottom:8px;text-transform:uppercase}.pbar{display:flex;align-items:center;gap:7px;margin-bottom:5px;font-size:11px}.pbtrack{flex:1;background:#F0EFEB;border-radius:3px;height:5px}.pbfill{height:5px;border-radius:3px}.pe{border-left:3px solid #5A3A8A;padding:5px 9px;margin-bottom:7px;font-size:11px}.pe-d{font-size:9px;color:#A09E98;margin-bottom:2px}@media print{body{padding:0}}</style></head><body>${frame.innerHTML}<script>window.print()<\/script></body></html>`);
+    w.document.close(); toast('Abriendo para imprimir / guardar como PDF...');
+  };
+
+  // ── Saves ──────────────────────────────────────────────────
+  const sTr=document.getElementById('save-training');
+  if (sTr) sTr.onclick=()=>{
+    const dur=parseInt(document.getElementById('f-dur')?.value)||0;
+    const entry={id:Date.now(),date:td(),created_at:new Date().toISOString(),type:ST.form.type||'strength',muscles:[...ST.muscles],
+      exercises:document.getElementById('f-ex')?.value||'',cardio_type:document.getElementById('f-ctype')?.value||'',
+      duration:dur,intensity:parseInt(document.getElementById('f-int')?.value)||5,notes:document.getElementById('f-notes')?.value||''};
+    ST.trainings.push(entry); persist('trainings');
+    const hk=ST.form.type==='cardio'?'cardio':'strength'; setH(hk,(th()[hk]||0)+dur);
+    toast('Entrenamiento guardado ✓'); go('training');
+  };
+
+  const sDi=document.getElementById('save-diary');
+  if (sDi) sDi.onclick=()=>{
+    const c=document.getElementById('f-content')?.value||'';
+    if (!c.trim()){toast('Escribe algo primero');return;}
+    ST.diaries.push({id:Date.now(),date:td(),created_at:new Date().toISOString(),emotion:ST.emotion,content:c,guided:false,
+      grateful:document.getElementById('f-grateful')?.value||'',tomorrow:document.getElementById('f-tomorrow')?.value||''});
+    persist('diaries'); toast('Entrada guardada ✓'); ST.ttab='diary'; go('thoughts');
+  };
+
+  const sTh=document.getElementById('save-thought');
+  if (sTh) sTh.onclick=()=>{
+    const sit=document.getElementById('f-sit')?.value||'', tho=document.getElementById('f-thought')?.value||'';
+    if (!sit||!tho){toast('Rellena situación y pensamiento');return;}
+    ST.thoughts.push({id:Date.now(),date:td(),created_at:new Date().toISOString(),mode:'simple',situation:sit,thought:tho,
+      emotion:ST.emotion,intensity:parseInt(document.getElementById('f-int')?.value)||5,
+      evidence_for:document.getElementById('f-evfor')?.value||'',evidence_against:document.getElementById('f-evag')?.value||'',
+      alternative:document.getElementById('f-alt')?.value||''});
+    persist('thoughts'); toast('Pensamiento registrado ✓'); ST.ttab='list'; go('thoughts');
+  };
+
+  const sSer=document.getElementById('save-sergio');
+  if (sSer) sSer.onclick=()=>{
+    const sit=document.getElementById('f-sit')?.value||''; if(!sit){toast('Describe la situación');return;}
+    ST.sergio.push({id:Date.now(),date:td(),created_at:new Date().toISOString(),situation:sit,
+      impulse:document.getElementById('f-impulse')?.value||'',emotion:ST.emotion,need:document.getElementById('f-need')?.value||'',
+      secure_action:document.getElementById('f-secure')?.value||'',actual_action:document.getElementById('f-actual')?.value||'',
+      result:document.getElementById('f-result')?.value||''});
+    persist('sergio'); toast('¡Momento Sergio guardado! 💜'); ST.ttab='sergio'; go('thoughts');
+  };
+
+  // ── Cogn ────────────────────────────────────────────────────
+  q('[data-cem]',  el=>{ST.cform.emotion=el.dataset.cem; render();});
+  q('[data-bias]', el=>{ST.cform.bias=el.dataset.bias; render();});
+  const ci=document.getElementById('cf-int');
+  if (ci) ci.oninput=()=>{ST.cform.intensity=parseInt(ci.value);const v=document.getElementById('cv');if(v)v.textContent=ci.value;};
+  const cp=document.getElementById('cp');
+  if (cp) cp.onclick=()=>{if(ST.cstep>0){ST.cstep--;render();}};
+  const cn=document.getElementById('cn');
+  if (cn) cn.onclick=()=>{
+    const step=ST.cstep, cfg=COGN[step], cf=ST.cform;
+    if (cfg.type==='text'||cfg.type==='textarea') cf[cfg.f]=document.getElementById('cf')?.value||'';
+    else if (cfg.type==='evidence') {cf.evidence_for=document.getElementById('cf-for')?.value||'';cf.evidence_against=document.getElementById('cf-ag')?.value||'';}
+    else if (cfg.type==='narrative_builder') cf.narrative_new=document.getElementById('cf')?.value||'';
+    if (step===COGN.length-1) {
+      ST.thoughts.push({id:Date.now(),date:td(),created_at:new Date().toISOString(),mode:'cogn',
+        situation:cf.situation||'',narrative_old:cf.narrative_old||'',emotion:cf.emotion||'',intensity:cf.intensity||0,
+        evidence_for:cf.evidence_for||'',evidence_against:cf.evidence_against||'',bias:cf.bias||'',
+        need:cf.need||'',narrative_new:cf.narrative_new||'',action:cf.action||''});
+      persist('thoughts'); ST.cstep=0; ST.cform={};
+      toast('Reconstrucción guardada 💜'); ST.ttab='cogn'; go('thoughts');
+    } else { ST.cstep=step+1; render(); }
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════════════════════════
+setPreset('week');
+loadAll();
+render();
+</script>
+</body>
+</html>
