@@ -556,7 +556,8 @@ function buildCoachContext(){
   return lines.join('\n');
 }
 
-const COACH_SYSTEM_PROMPT = `Eres el coach personal de ${USER_NAME}. Combinas tres roles en uno: entrenador personal y de nutrición de alto rendimiento, psicólogo cognitivo-conductual, y mentor de desarrollo personal y motivación.
+function getCoachSystemPrompt(){
+  return `Eres el coach personal de ${USER_NAME}. Combinas tres roles en uno: entrenador personal y de nutrición de alto rendimiento, psicólogo cognitivo-conductual, y mentor de desarrollo personal y motivación.
 
 Tienes acceso a datos reales y recientes de ${USER_NAME} (se incluyen abajo). Hablas en español, en primera persona dirigiéndote a él, con un tono cercano, directo y honesto, sin paternalismo ni frases vacías.
 
@@ -571,6 +572,7 @@ Reglas:
 
 DATOS DE ${USER_NAME}:
 ${buildCoachContext()}`;
+}
 
 async function callClaude(messages,systemPrompt,maxTokens=1024){
   const apiKey=getStr('apikey');
@@ -702,7 +704,7 @@ function rDash(){
       ${earned.length?`<div style="font-size:24px">${earned[earned.length-1].icon}</div>`:''}
     </div>`:''}
 
-    ${earned.length?`<div class="card">
+    <div class="card">
       <div class="cl">Mis logros 🏅</div>
       <div class="badges-wrap">
         ${BADGES.map(b=>{
@@ -713,7 +715,7 @@ function rDash(){
           </div>`;
         }).join('')}
       </div>
-    </div>`:''}
+    </div>
 
     <div class="quote-strip">
       <div class="quote-text">"${QUOTES[now.getDay()%QUOTES.length]}"</div>
@@ -1148,12 +1150,12 @@ function rStats(){
       <div class="stat-card"><div class="stat-num" style="color:var(--purple)">${totalSer}</div><div class="stat-lbl">💜 Sergios</div></div>
     </div>
 
-    ${earned.length?`<div class="card">
-      <div class="cl">Logros desbloqueados</div>
+    <div class="card">
+      <div class="cl">Logros — ${earned.length}/${BADGES.length}</div>
       <div class="badges-wrap">
         ${BADGES.map(b=>{const e=earned.find(x=>x.id===b.id);return`<div class="badge ${e?'earned':'locked'}"><div class="badge-icon">${b.icon}</div><div class="badge-label">${b.label}</div></div>`;}).join('')}
       </div>
-    </div>`:''}
+    </div>
 
     <div class="card">
       <div class="cl">Últimos 28 días</div>
@@ -1793,7 +1795,7 @@ function attachAll(){
     ST.coachMessages.push({role:'user',content:text});
     ST.coachLoading=true;render();
     const apiMsgs=ST.coachMessages.map(m=>({role:m.role,content:m.content}));
-    const reply=await callClaude(apiMsgs,COACH_SYSTEM_PROMPT,1024);
+    const reply=await callClaude(apiMsgs,getCoachSystemPrompt(),1024);
     ST.coachLoading=false;
     if(reply)ST.coachMessages.push({role:'assistant',content:reply});
     if(ST.coachMessages.length>30)ST.coachMessages=ST.coachMessages.slice(-30);
@@ -1809,7 +1811,7 @@ function attachAll(){
     ST.reportAnalysisLoading=true;render();
     const from=ST.rfrom,to=ST.rto;
     const userMsg=`Acabo de generar mi informe del periodo ${fdateShort(from)} a ${fdateShort(to)}. Analízalo con los datos que tienes y dime: qué patrones ves, qué estoy consolidando, dónde estoy fallando, y qué debería priorizar los próximos días. Sé breve y concreto.`;
-    const reply=await callClaude([{role:'user',content:userMsg}],COACH_SYSTEM_PROMPT,1024);
+    const reply=await callClaude([{role:'user',content:userMsg}],getCoachSystemPrompt(),1024);
     ST.reportAnalysisLoading=false;
     ST.reportAnalysis=reply||'No se pudo generar el análisis. Revisa tu API key en Más → Ajustes IA.';
     render();
@@ -1820,7 +1822,7 @@ function attachAll(){
   if(btnProgAi)btnProgAi.onclick=async()=>{
     ST.progAnalysisLoading=true;render();
     const userMsg=`Mira mi historial de entrenamientos, especialmente los pesos y repeticiones por ejercicio. Dime en qué ejercicios estoy estancado (mismo peso varias sesiones), qué variación me recomiendas para cada uno, y si ves algún desequilibrio entre grupos musculares (por ejemplo, mucho empuje y poco tirón). Sé breve, directo y concreto, en 4-6 frases.`;
-    const reply=await callClaude([{role:'user',content:userMsg}],COACH_SYSTEM_PROMPT,800);
+    const reply=await callClaude([{role:'user',content:userMsg}],getCoachSystemPrompt(),800);
     ST.progAnalysisLoading=false;
     ST.progAnalysis=reply||'No se pudo generar el análisis. Revisa tu API key en Más → Ajustes IA.';
     render();
