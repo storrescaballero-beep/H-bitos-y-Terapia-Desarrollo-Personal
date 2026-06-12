@@ -273,6 +273,26 @@ const HC = [
 ];
 const MUSCLES = ['Pecho','Espalda','Hombros','Bíceps','Tríceps','Piernas','Glúteos','Abdomen','Full body','Empuje','Tirón','Tren superior','Tren inferior'];
 const CTYPES  = ['Comba','Sentadillas','Yoga','Natación','Caminar','Correr','Bicicleta','Elíptica','Otro'];
+const EXERCISES_BY_MUSCLE = {
+  'Pecho':['Press banca','Press inclinado mancuernas','Press declinado','Aperturas con mancuernas','Fondos en paralelas','Press en máquina','Cruces en polea'],
+  'Espalda':['Dominadas','Remo con barra','Remo con mancuerna','Jalón al pecho','Peso muerto','Remo en T','Pull-over'],
+  'Hombros':['Press militar','Elevaciones laterales','Elevaciones frontales','Pájaros (deltoide posterior)','Press Arnold','Encogimientos'],
+  'Bíceps':['Curl con barra','Curl con mancuernas','Curl martillo','Curl banco Scott','Curl concentrado','Curl en polea'],
+  'Tríceps':['Press francés','Extensiones en polea','Fondos en banco','Patada de tríceps','Press cerrado'],
+  'Piernas':['Sentadilla','Prensa de piernas','Extensiones de cuádriceps','Curl femoral','Zancadas','Sentadilla búlgara','Hip thrust'],
+  'Glúteos':['Hip thrust','Peso muerto rumano','Patada de glúteo','Puente de glúteo','Abducción de cadera'],
+  'Abdomen':['Crunch','Plancha','Elevación de piernas','Rueda abdominal','Crunch en polea','Russian twist'],
+  'Full body':['Burpees','Clean and press','Thrusters','Kettlebell swing','Remo con barra'],
+  'Empuje':['Press banca','Press militar','Fondos en paralelas','Press inclinado mancuernas'],
+  'Tirón':['Dominadas','Remo con barra','Peso muerto','Jalón al pecho'],
+  'Tren superior':['Press banca','Dominadas','Press militar','Remo con barra','Curl con barra'],
+  'Tren inferior':['Sentadilla','Peso muerto','Prensa de piernas','Zancadas','Hip thrust'],
+};
+const BOOK_STATUS = ['Leyendo','Terminado','Pausado'];
+const AI_MODELS = [
+  {k:'claude-sonnet-4-6', l:'Sonnet — rápido, ideal a diario'},
+  {k:'claude-opus-4-6',   l:'Opus — más profundo, análisis grandes'},
+];
 const EMOTIONS = ['😌 Calma','😊 Alegría','😤 Frustración','😟 Ansiedad','😔 Tristeza','😡 Enfado','🤗 Gratitud','😴 Cansancio','💪 Motivación','🤔 Confusión'];
 const BIASES = [
   {k:'catastrophizing',l:'Catastrofismo',d:'Imaginas el peor escenario posible'},
@@ -340,6 +360,7 @@ const NAVS = [
   {k:'training',l:'Entreno', svg:'<path d="M6 12h12M4 9l2 3-2 3M18 9l2 3-2 3"/>'},
   {k:'thoughts',l:'Mente',   svg:'<path d="M4 6h16M4 10h10M4 14h12M4 18h8"/>'},
   {k:'stats',   l:'Stats',   svg:'<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 12v4M12 8v8M16 10v6"/>'},
+  {k:'more',    l:'Más',     svg:'<circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/>'},
 ];
 
 // ═══════════════════════════════════════════════════════════════
@@ -347,7 +368,7 @@ const NAVS = [
 // ═══════════════════════════════════════════════════════════════
 const ST = {
   sc:'dash',
-  habits:{}, trainings:[], diaries:[], thoughts:[], sergio:[],
+  habits:{}, trainings:[], diaries:[], thoughts:[], sergio:[], books:[],
   today: new Date().toISOString().split('T')[0],
   form:{}, muscles:[], emotion:'',
   diaryMode:'guided', diaryAnswers:{},
@@ -357,16 +378,27 @@ const ST = {
   rpreset:'week', rfrom:'', rto:'', rgen:false,
   stab:'habits',
   newBadges:[],
+  // Exercise picker state for training form
+  exForm:{exercises:[]},
+  // AI coach
+  coachMessages:[],
+  coachLoading:false,
+  reportAnalysis:null, reportAnalysisLoading:false,
+  progAnalysis:null, progAnalysisLoading:false,
+  bform:{},
 };
 
 // ═══════════════════════════════════════════════════════════════
 // STORAGE — same sg5_ prefix, zero data loss
 // ═══════════════════════════════════════════════════════════════
-const SKEYS = ['habits','trainings','diaries','thoughts','sergio'];
+const SKEYS = ['habits','trainings','diaries','thoughts','sergio','books'];
 function lsGet(k){ try{const v=localStorage.getItem('sg5_'+k);return v?JSON.parse(v):null;}catch{return null;} }
 function lsSet(k,v){ try{localStorage.setItem('sg5_'+k,JSON.stringify(v));}catch(e){console.warn(e);} }
 function loadAll(){ SKEYS.forEach(k=>{const v=lsGet(k);if(v!==null)ST[k]=v;}); }
 function persist(k){ lsSet(k,ST[k]); }
+// Plain string storage for settings (API key, model, coach history)
+function getStr(k){ try{return localStorage.getItem('sg5_'+k)||'';}catch{return'';} }
+function setStr(k,v){ try{localStorage.setItem('sg5_'+k,v);}catch(e){} }
 
 // ═══════════════════════════════════════════════════════════════
 // HELPERS
@@ -422,6 +454,147 @@ function safeChart(id,config){
   const ex=Chart.getChart(el);if(ex)ex.destroy();
   new Chart(el,config);
 }
+
+// ── Exercise memory: last sets used for a given exercise ──
+function getLastSets(name){
+  for(let i=ST.trainings.length-1;i>=0;i--){
+    const t=ST.trainings[i];
+    if(t.exercise_sets&&t.exercise_sets[name]&&t.exercise_sets[name].length){
+      return t.exercise_sets[name].map(s=>({reps:s.reps,weight:s.weight}));
+    }
+  }
+  return null;
+}
+// ── Detect stagnation: same top weight for 3+ recent sessions of an exercise ──
+function getExerciseHistory(name,limit=6){
+  const hist=[];
+  for(let i=ST.trainings.length-1;i>=0&&hist.length<limit;i--){
+    const t=ST.trainings[i];
+    if(t.exercise_sets&&t.exercise_sets[name]&&t.exercise_sets[name].length){
+      const weights=t.exercise_sets[name].map(s=>parseFloat(s.weight)||0);
+      hist.push({date:t.date,max:Math.max(...weights),sets:t.exercise_sets[name]});
+    }
+  }
+  return hist;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// AI COACH — Anthropic API (key stored locally, never leaves device)
+// ═══════════════════════════════════════════════════════════════
+function buildCoachContext(){
+  const str=calcStreak(),prog=dayProg();
+  const lines=[];
+  lines.push(`Racha actual: ${str} días. Progreso de hoy: ${prog}%.`);
+
+  // Habits last 7 days totals
+  const last7={};HC.forEach(c=>last7[c.k]=0);
+  for(let i=0;i<7;i++){
+    const d=dateAdd(td(),-i);const h=ST.habits[d]||{};
+    HC.forEach(c=>last7[c.k]+=(h[c.k]||0));
+  }
+  lines.push('Minutos últimos 7 días: '+HC.map(c=>`${c.n} ${last7[c.k]}m (objetivo ${c.g*7}m)`).join(', ')+'.');
+
+  // Recent trainings with exercise data
+  const rt=ST.trainings.slice(-6).reverse();
+  if(rt.length){
+    lines.push('\nÚLTIMOS ENTRENAMIENTOS:');
+    rt.forEach(t=>{
+      let s=`- ${fdateShort(t.date)}: ${t.type==='cardio'?(t.cardio_type||'cardio'):(t.muscles||[]).join(', ')}`;
+      if(t.duration)s+=` · ${t.duration}min`;
+      if(t.intensity)s+=` · intensidad ${t.intensity}/10`;
+      if(t.exercise_sets){
+        Object.entries(t.exercise_sets).forEach(([ex,sets])=>{
+          s+=`\n   ${ex}: `+sets.map(x=>`${x.reps}x${x.weight}kg`).join(', ');
+        });
+      }
+      lines.push(s);
+    });
+  }
+
+  // Recent diary
+  const rd=ST.diaries.slice(-5).reverse();
+  if(rd.length){
+    lines.push('\nÚLTIMAS ENTRADAS DE DIARIO:');
+    rd.forEach(d=>{
+      if(d.guided&&d.guided_answers){
+        const g=d.guided_answers;
+        lines.push(`- ${fdateShort(d.date)}: pasó: ${(g.what_happened||'').slice(0,200)} | sintió: ${(g.feelings||'').slice(0,150)} | pensamiento repetido: ${(g.repeated_thought||'').slice(0,150)} | modo: ${g.sergio_mode||'-'} | aprendizaje: ${(g.learning||'').slice(0,150)}`);
+      }else{
+        lines.push(`- ${fdateShort(d.date)}: ${(d.content||'').slice(0,250)}`);
+      }
+    });
+  }
+
+  // Recent thoughts
+  const rth=ST.thoughts.filter(t=>t.mode==='simple').slice(-5).reverse();
+  if(rth.length){
+    lines.push('\nÚLTIMOS PENSAMIENTOS AUTOMÁTICOS:');
+    rth.forEach(t=>lines.push(`- ${fdateShort(t.date)}: situación: ${t.situation} | pensamiento: "${t.thought}" | emoción: ${t.emotion||'-'} (${t.intensity}/10) | alternativa: ${t.alternative||'-'}`));
+  }
+
+  // Recent cognitive reconstructions
+  const rc=ST.thoughts.filter(t=>t.mode==='cogn').slice(-3).reverse();
+  if(rc.length){
+    lines.push('\nÚLTIMAS RECONSTRUCCIONES COGNITIVAS:');
+    rc.forEach(c=>lines.push(`- ${fdateShort(c.date)}: "${c.narrative_old}" → "${c.narrative_new}" (sesgo: ${BIASES.find(b=>b.k===c.bias)?.l||'-'})`));
+  }
+
+  // Recent sergio moments
+  const rs=ST.sergio.slice(-5).reverse();
+  if(rs.length){
+    lines.push('\nÚLTIMOS MOMENTOS "SERGIO SEGURO":');
+    rs.forEach(s=>lines.push(`- ${fdateShort(s.date)}: ${s.situation} | necesitaba: ${s.need||'-'} | Sergio seguro haría: ${s.secure_action||'-'} | resultado: ${s.result||'-'}`));
+  }
+
+  // Books
+  const rb=ST.books.slice(-3).reverse();
+  if(rb.length){
+    lines.push('\nLIBROS RECIENTES:');
+    rb.forEach(b=>lines.push(`- "${b.title}" (${b.author||'?'}, ${b.status}): ideas: ${(b.ideas||'').slice(0,150)} | frase: "${b.quote||''}" | aplicación: ${(b.application||'').slice(0,150)}`));
+  }
+
+  return lines.join('\n');
+}
+
+const COACH_SYSTEM_PROMPT = `Eres el coach personal de ${USER_NAME}. Combinas tres roles en uno: entrenador personal y de nutrición de alto rendimiento, psicólogo cognitivo-conductual, y mentor de desarrollo personal y motivación.
+
+Tienes acceso a datos reales y recientes de ${USER_NAME} (se incluyen abajo). Hablas en español, en primera persona dirigiéndote a él, con un tono cercano, directo y honesto, sin paternalismo ni frases vacías.
+
+Reglas:
+- No das diagnósticos clínicos ni sustituyes a su psicóloga; si detectas señales de alarma graves, sugiérele hablarlo con su psicóloga.
+- Ancla siempre tus observaciones en datos concretos (fechas, pesos, repeticiones, emociones, frases textuales que él ha escrito).
+- Si detectas estancamiento en un ejercicio (mismo peso máximo en 3+ sesiones), nómbralo y sugiere una variación concreta (cambio de ángulo, tempo, rango, accesorio).
+- Si ves patrones emocionales o pensamientos repetidos, nómbralos con delicadeza, sin juzgar, conectándolos si puedes con lo que ha trabajado en "Sergio seguro" o reconstrucción cognitiva.
+- Celebra rachas y logros con precisión (con números reales), nunca de forma genérica.
+- Termina siempre con 1-2 acciones concretas y realistas para las próximas 24-48 horas.
+- Respuestas en formato conversacional, sin encabezados ni bullets salvo que ayuden mucho a la claridad.
+
+DATOS DE ${USER_NAME}:
+${buildCoachContext()}`;
+
+async function callClaude(messages,systemPrompt,maxTokens=1024){
+  const apiKey=getStr('apikey');
+  if(!apiKey){toast('Configura tu API key en Más → Ajustes IA');return null;}
+  const model=getStr('model')||'claude-sonnet-4-6';
+  try{
+    const res=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'x-api-key':apiKey,
+        'anthropic-version':'2023-06-01',
+        'anthropic-dangerous-direct-browser-access':'true'
+      },
+      body:JSON.stringify({model,max_tokens:maxTokens,system:systemPrompt,messages})
+    });
+    const data=await res.json();
+    if(data.error)throw new Error(data.error.message||'Error de la API');
+    return (data.content||[]).map(b=>b.text||'').join('\n').trim();
+  }catch(e){
+    toast('Error IA: '+e.message);
+    return null;
+  }
+}
 function toast(msg){
   const t=document.getElementById('toast');if(!t)return;
   t.textContent=msg;t.classList.add('show');
@@ -429,9 +602,11 @@ function toast(msg){
 }
 function go(sc){
   ST.sc=sc;ST.form={};ST.muscles=[];ST.emotion='';
-  if(sc==='reports')ST.rgen=false;
+  if(sc==='reports'){ST.rgen=false;ST.reportAnalysis=null;}
   if(sc==='cogn_form'){ST.cstep=0;ST.cform={};}
   if(sc==='diary_form')ST.diaryAnswers={};
+  if(sc==='training_form')ST.exForm={exercises:[]};
+  if(sc==='book_form')ST.bform={};
   render();
 }
 function nav(active){
@@ -456,10 +631,17 @@ function render(){
   else if(sc==='sergio_form')   html=rSergioForm();
   else if(sc==='stats')         html=rStats();
   else if(sc==='reports')       html=rReports();
+  else if(sc==='more')          html=rMore();
+  else if(sc==='coach')         html=rCoach();
+  else if(sc==='book_form')     html=rBookForm();
   app.innerHTML=html;
   attachAll();
   if(sc==='stats')drawCharts();
   if(sc==='reports'&&ST.rgen)drawReportChart();
+  if(sc==='coach'){
+    const cl=document.getElementById('coach-log');
+    if(cl)cl.scrollTop=cl.scrollHeight;
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -546,6 +728,15 @@ function rDash(){
         `<button class="qa-btn" data-go="${b.g}"><div class="qa-icon">${b.i}</div><div class="qa-label">${b.l}</div></button>`).join('')}
     </div>
 
+    <div style="background:linear-gradient(135deg,#1A0F00,#2A1500);border-radius:var(--r);padding:16px;margin-bottom:14px;display:flex;align-items:center;gap:12px;cursor:pointer" data-go="coach">
+      <div style="font-size:28px">🤖</div>
+      <div style="flex:1">
+        <div style="font-size:14px;font-weight:500;color:#fff;font-family:'Playfair Display',serif">Habla con tu coach</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.5);margin-top:2px">Motivación, psicología, entreno y nutrición — con tus datos reales</div>
+      </div>
+      <div style="color:rgba(255,255,255,.4);font-size:18px">→</div>
+    </div>
+
     <div style="display:flex;gap:8px">
       <button style="flex:1;background:var(--card);border:1.5px solid var(--border);border-radius:var(--r);padding:12px;font-size:12px;font-weight:500;color:var(--t2);cursor:pointer;font-family:var(--font-body)" data-go="reports">📊 Informe</button>
       <button style="flex:1;background:var(--card);border:1.5px solid var(--border);border-radius:var(--r);padding:12px;font-size:12px;font-weight:500;color:var(--purple);cursor:pointer;font-family:var(--font-body)" data-go="cogn_form">🔄 Reconstrucción</button>
@@ -588,6 +779,12 @@ function rTraining(){
   const list=ST.trainings.slice().reverse().slice(0,30);
   return`<div class="tb"><div class="tb-title">💪 Entrenamiento</div><button class="tb-btn" data-go="training_form">+ Nuevo</button></div>
   <div class="ct">
+  <div style="background:linear-gradient(135deg,#F3EEFF,#EDE6FF);border:1px solid #C8B8F0;border-radius:var(--r);padding:14px;margin-bottom:14px">
+    <div style="font-size:13px;font-weight:500;color:var(--purple);margin-bottom:4px">🤖 Coach de progresión</div>
+    <div style="font-size:11px;color:#7A5AAA;line-height:1.5;margin-bottom:8px">Analiza tu historial de pesos y reps y te dice cuándo cambiar de ejercicio para seguir creciendo.</div>
+    <button id="btn-prog-analysis" style="background:var(--purple);color:#fff;border:none;padding:8px 16px;border-radius:20px;font-size:12px;cursor:pointer;font-family:var(--font-body)" ${ST.progAnalysisLoading?'disabled':''}>${ST.progAnalysisLoading?'Analizando...':'Analizar mi progresión →'}</button>
+    ${ST.progAnalysis?`<div style="margin-top:10px;padding:12px;background:rgba(255,255,255,.6);border-radius:10px;font-size:12px;color:var(--text);line-height:1.7;white-space:pre-line">${ST.progAnalysis}</div>`:''}
+  </div>
   ${!list.length?`<div class="empty"><div class="empty-icon">🏋️</div><div class="empty-text">Sin entrenamientos aún.</div></div>`:
   list.map(e=>`<div class="ec">
     <div class="em">${fdateShort(e.date)} · ${e.type==='cardio'?'Cardio':'Fuerza'}</div>
@@ -596,13 +793,20 @@ function rTraining(){
       ${e.duration?`<span class="tag tag-b">⏱ ${e.duration} min</span>`:''}
       ${e.intensity?`<span class="tag tag-o">💥 Intensidad ${e.intensity}/10</span>`:''}
     </div>
-    ${e.exercises?`<div class="eb" style="margin-top:6px;white-space:pre-line">${e.exercises}</div>`:''}
+    ${e.exercise_sets&&Object.keys(e.exercise_sets).length?`<div style="margin-top:8px;display:flex;flex-direction:column;gap:4px">
+      ${Object.entries(e.exercise_sets).map(([name,sets])=>`<div style="font-size:12px;color:var(--t2)"><strong style="color:var(--text)">${name}</strong>: ${sets.map(s=>`${s.reps||'?'}×${s.weight||'?'}kg`).join(', ')}</div>`).join('')}
+    </div>`:e.exercises?`<div class="eb" style="margin-top:6px;white-space:pre-line">${e.exercises}</div>`:''}
     ${e.notes?`<div class="eb" style="margin-top:5px;color:var(--t3)">${e.notes}</div>`:''}
   </div>`).join('')}
   </div>${nav('training')}`;
 }
 function rTrainingForm(){
   const isC=ST.form.type==='cardio';
+  // Build available exercise list from selected muscles
+  const availEx=[];
+  ST.muscles.forEach(m=>{(EXERCISES_BY_MUSCLE[m]||[]).forEach(e=>{if(!availEx.includes(e))availEx.push(e);});});
+  const addedNames=ST.exForm.exercises.map(e=>e.name);
+
   return`<div class="tb"><button class="tb-back" data-go="training">←</button><div class="tb-title">Nuevo entreno</div></div>
   <div class="ct">
     <div class="fg"><label class="fl">Tipo</label>
@@ -611,9 +815,42 @@ function rTrainingForm(){
         <button class="chip${isC?' on':''}" data-type="cardio">🏃 Cardio</button>
       </div>
     </div>
-    ${!isC?`<div class="fg"><label class="fl">Músculos trabajados</label><div style="display:flex;flex-wrap:wrap;gap:5px">${MUSCLES.map(m=>`<button class="chip${ST.muscles.includes(m)?' on':''}" data-muscle="${m}">${m}</button>`).join('')}</div></div>
-    <div class="fg"><label class="fl">Ejercicios (uno por línea)</label><textarea class="ta" id="f-ex" placeholder="Press banca 4x8 60kg&#10;Dominadas 3x10">${ST.form.exercises||''}</textarea></div>`
-    :`<div class="fg"><label class="fl">Tipo de cardio</label><select class="fi" id="f-ctype">${CTYPES.map(t=>`<option>${t}</option>`).join('')}</select></div>`}
+    ${!isC?`
+    <div class="fg"><label class="fl">Músculos trabajados</label><div style="display:flex;flex-wrap:wrap;gap:5px">${MUSCLES.map(m=>`<button class="chip${ST.muscles.includes(m)?' on':''}" data-muscle="${m}">${m}</button>`).join('')}</div></div>
+
+    ${ST.muscles.length?`<div class="fg">
+      <label class="fl">Ejercicios — toca para añadir</label>
+      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:10px">
+        ${availEx.map(e=>`<button class="chip${addedNames.includes(e)?' on':''}" data-toggle-ex="${e}">${e}</button>`).join('')}
+      </div>
+      <div style="display:flex;gap:6px;margin-bottom:12px">
+        <input class="fi" type="text" id="f-custom-ex" placeholder="Otro ejercicio personalizado..." style="flex:1">
+        <button class="bs" id="add-custom-ex" style="width:auto;margin-top:0;padding:10px 16px;white-space:nowrap">+ Añadir</button>
+      </div>
+
+      ${ST.exForm.exercises.map((ex,ei)=>{
+        const last=getLastSets(ex.name);
+        return`<div class="card" style="border-color:var(--border)">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div style="font-size:13px;font-weight:500">${ex.name}</div>
+            <button data-remove-ex="${ei}" style="background:none;border:none;color:var(--t3);font-size:16px;cursor:pointer;padding:0 4px">×</button>
+          </div>
+          ${last?`<div style="font-size:10px;color:var(--t3);margin-bottom:8px">Última vez: ${last.map(s=>`${s.reps}×${s.weight}kg`).join(', ')}</div>`:''}
+          <div style="display:flex;flex-direction:column;gap:6px">
+            ${ex.sets.map((s,si)=>`<div style="display:flex;gap:6px;align-items:center">
+              <span style="font-size:10px;color:var(--t3);width:38px">Serie ${si+1}</span>
+              <input class="fi" type="number" inputmode="numeric" placeholder="reps" value="${s.reps||''}" id="ex-${ei}-${si}-reps" style="flex:1;padding:8px 10px;font-size:13px">
+              <span style="font-size:11px;color:var(--t3)">×</span>
+              <input class="fi" type="number" inputmode="decimal" placeholder="kg" value="${s.weight||''}" id="ex-${ei}-${si}-w" style="flex:1;padding:8px 10px;font-size:13px">
+              <span style="font-size:11px;color:var(--t3)">kg</span>
+              ${ex.sets.length>1?`<button data-remove-set="${ei}-${si}" style="background:none;border:none;color:var(--t3);font-size:15px;cursor:pointer;padding:0 2px">×</button>`:'<span style="width:17px"></span>'}
+            </div>`).join('')}
+          </div>
+          <button class="chip" data-add-set="${ei}" style="margin-top:8px">+ serie</button>
+        </div>`;
+      }).join('')}
+    </div>`:''}
+    `:`<div class="fg"><label class="fl">Tipo de cardio</label><select class="fi" id="f-ctype">${CTYPES.map(t=>`<option>${t}</option>`).join('')}</select></div>`}
     <div class="fg"><label class="fl">Duración (min)</label><input class="fi" type="number" id="f-dur" placeholder="60" min="1" max="300" value="${ST.form.duration||''}"></div>
     <div class="fg"><label class="fl">Intensidad: <span id="iv">${ST.form.intensity||5}</span>/10</label>
       <input type="range" min="1" max="10" step="1" value="${ST.form.intensity||5}" id="f-int" style="width:100%;accent-color:var(--acc);margin-top:6px">
@@ -622,6 +859,18 @@ function rTrainingForm(){
     <button class="bp" id="save-training">Guardar entrenamiento</button>
     <button class="bs" data-go="training">Cancelar</button>
   </div>`;
+}
+
+// Sync DOM input values into ST.exForm before any re-render that could lose them
+function syncExForm(){
+  ST.exForm.exercises.forEach((ex,ei)=>{
+    ex.sets.forEach((s,si)=>{
+      const r=document.getElementById(`ex-${ei}-${si}-reps`);
+      const w=document.getElementById(`ex-${ei}-${si}-w`);
+      if(r)s.reps=r.value;
+      if(w)s.weight=w.value;
+    });
+  });
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1145,6 +1394,13 @@ function rReportView(){
       <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);font-size:10px;color:var(--t3);text-align:center">Informe personal y confidencial · No sustituye orientación profesional</div>
     </div></div>
 
+    <div style="background:linear-gradient(135deg,#F3EEFF,#EDE6FF);border:1px solid #C8B8F0;border-radius:var(--r);padding:14px;margin-top:14px">
+      <div style="font-size:13px;font-weight:500;color:var(--purple);margin-bottom:4px">🤖 Análisis con IA</div>
+      <div style="font-size:11px;color:#7A5AAA;line-height:1.5;margin-bottom:8px">Tu coach revisa este informe y te dice qué acciones priorizar.</div>
+      <button id="btn-report-ai" style="background:var(--purple);color:#fff;border:none;padding:8px 16px;border-radius:20px;font-size:12px;cursor:pointer;font-family:var(--font-body)" ${ST.reportAnalysisLoading?'disabled':''}>${ST.reportAnalysisLoading?'Analizando...':'Analizar este informe →'}</button>
+      ${ST.reportAnalysis?`<div style="margin-top:10px;padding:12px;background:rgba(255,255,255,.6);border-radius:10px;font-size:12px;color:var(--text);line-height:1.7;white-space:pre-line">${ST.reportAnalysis}</div>`:''}
+    </div>
+
     <button class="bp g" id="dl-pdf" style="margin-top:14px;display:flex;align-items:center;justify-content:center;gap:8px">⬇ Descargar como PDF</button>
     <button class="bs" id="back-rpt">← Modificar informe</button>
   </div>${nav('stats')}`;
@@ -1158,6 +1414,105 @@ function drawReportChart(){
   if(!entries.length)return;
   safeChart('rpt-tr',{type:'bar',data:{labels:entries.map(e=>e[0]),datasets:[{data:entries.map(e=>e[1]),backgroundColor:'#4A2A7A',borderRadius:4}]},
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{font:{size:9},stepSize:1}},x:{ticks:{font:{size:9}}}}}});
+}
+
+// ═══════════════════════════════════════════════════════════════
+// MÁS — settings, books library, backup
+// ═══════════════════════════════════════════════════════════════
+function rMore(){
+  const apiKey=getStr('apikey');
+  const model=getStr('model')||'claude-sonnet-4-6';
+  const books=ST.books.slice().reverse();
+  return`<div class="tb"><div class="tb-title">⚙️ Más</div></div>
+  <div class="ct">
+
+    <div class="card">
+      <div class="cl">Coach IA — ajustes</div>
+      <div style="font-size:12px;color:var(--t2);line-height:1.6;margin-bottom:10px">Tu API key de Anthropic se guarda solo en este dispositivo (localStorage). Nunca se sube a GitHub ni sale de tu navegador.</div>
+      <div class="fg"><label class="fl">API Key</label>
+        <input class="fi" type="password" id="f-apikey" placeholder="sk-ant-..." value="${apiKey}">
+      </div>
+      <div class="fg"><label class="fl">Modelo</label>
+        <select class="fi" id="f-model">${AI_MODELS.map(m=>`<option value="${m.k}" ${model===m.k?'selected':''}>${m.l}</option>`).join('')}</select>
+      </div>
+      <button class="bp p" id="save-apikey">Guardar ajustes IA</button>
+      ${apiKey?`<div style="font-size:11px;color:var(--green);margin-top:8px">✓ API key configurada</div>`:`<div style="font-size:11px;color:var(--t3);margin-top:8px">Sin API key — el coach y los análisis no funcionarán hasta que la añadas.</div>`}
+    </div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div class="cl" style="margin-bottom:0">📚 Mis libros</div>
+        <button class="tb-btn" data-go="book_form" style="font-size:11px;padding:5px 12px">+ Nuevo</button>
+      </div>
+      ${!books.length?`<div style="text-align:center;padding:20px;color:var(--t3)"><div style="font-size:28px;margin-bottom:6px">📚</div><div style="font-size:12px">Aún no has añadido libros.</div></div>`:
+      books.map(b=>`<div class="ec">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5px">
+          <div>
+            <div class="et" style="font-family:'Playfair Display',serif;font-style:italic">${b.title}</div>
+            <div class="em" style="margin-bottom:0">${b.author?b.author+' · ':''}${fdateShort(b.date)}</div>
+          </div>
+          <span class="tag ${b.status==='Terminado'?'tag-g':b.status==='Leyendo'?'tag-b':'tag-o'}">${b.status}</span>
+        </div>
+        ${b.ideas?`<div style="font-size:10px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.05em;margin-top:6px;margin-bottom:2px">Ideas clave</div><div class="eb">${b.ideas}</div>`:''}
+        ${b.quote?`<div style="margin-top:8px;padding:8px;background:var(--acc-light);border-radius:8px;font-size:12px;color:var(--acc);font-family:'Playfair Display',serif;font-style:italic">"${b.quote}"</div>`:''}
+        ${b.application?`<div style="font-size:11px;color:var(--green);margin-top:6px">🎯 ${b.application}</div>`:''}
+      </div>`).join('')}
+    </div>
+
+    <div class="card">
+      <div class="cl">Mis datos</div>
+      <div style="font-size:12px;color:var(--t2);line-height:1.6;margin-bottom:12px">Tus datos solo existen en este dispositivo. Guarda una copia antes de actualizar la app o cambiar de navegador.</div>
+      <button id="btn-backup" style="width:100%;background:var(--card);border:1.5px solid var(--border);border-radius:12px;padding:12px;font-size:13px;font-weight:500;color:var(--text);cursor:pointer;font-family:var(--font-body);display:flex;align-items:center;justify-content:center;gap:8px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Exportar backup de mis datos
+      </button>
+    </div>
+  </div>${nav('more')}`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// COACH IA — chat
+// ═══════════════════════════════════════════════════════════════
+function rCoach(){
+  const hasKey=!!getStr('apikey');
+  const msgs=ST.coachMessages;
+  return`<div class="tb"><button class="tb-back" data-go="dash">←</button><div class="tb-title">🤖 Tu coach</div></div>
+  <div class="ct" style="display:flex;flex-direction:column;padding-bottom:90px">
+    ${!hasKey?`<div class="ibox ibox-o">Configura tu API key en <strong>Más → Ajustes IA</strong> para empezar a hablar con tu coach.</div>`:''}
+    <div style="background:linear-gradient(135deg,#1A0F00,#2A1500);border-radius:var(--r);padding:14px;margin-bottom:14px">
+      <div style="font-size:12px;color:rgba(255,255,255,.7);line-height:1.6">Tu coach conoce tu racha, tus entrenos, tu diario, tus pensamientos y tus momentos Sergio. Pregúntale lo que necesites — desde "¿cómo voy esta semana?" hasta "ayúdame a entender por qué me sentí así ayer".</div>
+    </div>
+    <div id="coach-log" style="display:flex;flex-direction:column;gap:10px;flex:1;overflow-y:auto;margin-bottom:12px">
+      ${msgs.map(m=>`<div style="display:flex;${m.role==='user'?'justify-content:flex-end':'justify-content:flex-start'}">
+        <div style="max-width:85%;padding:10px 14px;border-radius:14px;font-size:13px;line-height:1.6;white-space:pre-line;${m.role==='user'?'background:var(--acc);color:#fff;border-radius:14px 14px 4px 14px':'background:var(--card);border:1px solid var(--border);border-radius:14px 14px 14px 4px'}">${m.content}</div>
+      </div>`).join('')}
+      ${ST.coachLoading?`<div style="display:flex;justify-content:flex-start"><div style="padding:10px 14px;border-radius:14px;font-size:13px;background:var(--card);border:1px solid var(--border);color:var(--t3)">Pensando...</div></div>`:''}
+    </div>
+  </div>
+  <div style="position:fixed;bottom:calc(64px + var(--safe-bottom));left:0;right:0;max-width:480px;margin:0 auto;background:var(--card);border-top:1px solid var(--border);padding:10px 14px;display:flex;gap:8px;z-index:60">
+    <input class="fi" type="text" id="coach-input" placeholder="${hasKey?'Escribe tu mensaje...':'Configura tu API key primero'}" ${hasKey?'':'disabled'} style="flex:1">
+    <button class="tb-btn" id="coach-send" ${hasKey?'':'disabled'} style="padding:10px 18px">Enviar</button>
+  </div>
+  ${nav('thoughts')}`;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// BOOK FORM
+// ═══════════════════════════════════════════════════════════════
+function rBookForm(){
+  return`<div class="tb"><button class="tb-back" data-go="more">←</button><div class="tb-title">Nuevo libro</div></div>
+  <div class="ct">
+    <div class="fg"><label class="fl">Título</label><input class="fi" type="text" id="b-title" placeholder="Título del libro" value="${ST.bform.title||''}"></div>
+    <div class="fg"><label class="fl">Autor</label><input class="fi" type="text" id="b-author" placeholder="Autor (opcional)" value="${ST.bform.author||''}"></div>
+    <div class="fg"><label class="fl">Estado</label>
+      <div style="display:flex;gap:7px">${BOOK_STATUS.map(s=>`<button class="chip${(ST.bform.status||'Leyendo')===s?' on':''}" data-bstatus="${s}">${s}</button>`).join('')}</div>
+    </div>
+    <div class="fg"><label class="fl">Ideas principales</label><textarea class="ta" id="b-ideas" placeholder="¿Qué ideas te llevas de este libro?" style="min-height:100px">${ST.bform.ideas||''}</textarea></div>
+    <div class="fg"><label class="fl">Frase que te quedas</label><textarea class="ta" id="b-quote" placeholder="Una frase que te marcó...">${ST.bform.quote||''}</textarea></div>
+    <div class="fg"><label class="fl">¿Qué vas a aplicar?</label><textarea class="ta" id="b-application" placeholder="Algo concreto que vas a hacer con esto...">${ST.bform.application||''}</textarea></div>
+    <button class="bp" id="save-book">Guardar libro</button>
+    <button class="bs" data-go="more">Cancelar</button>
+  </div>`;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1219,8 +1574,50 @@ function attachAll(){
   q('[data-reset]', el=>{setH(el.dataset.reset,0);render();});
 
   // Training
-  q('[data-type]',   el=>{ST.form.type=el.dataset.type;render();});
+  q('[data-type]',   el=>{ST.form.type=el.dataset.type;ST.exForm={exercises:[]};render();});
   q('[data-muscle]', el=>{const m=el.dataset.muscle;ST.muscles.includes(m)?ST.muscles=ST.muscles.filter(x=>x!==m):ST.muscles.push(m);render();});
+
+  // Exercise picker
+  q('[data-toggle-ex]', el=>{
+    syncExForm();
+    const name=el.dataset.toggleEx;
+    const idx=ST.exForm.exercises.findIndex(e=>e.name===name);
+    if(idx>=0){ST.exForm.exercises.splice(idx,1);}
+    else{
+      const last=getLastSets(name);
+      ST.exForm.exercises.push({name,sets:last?last.map(s=>({reps:s.reps,weight:s.weight})):[{reps:'',weight:''}]});
+    }
+    render();
+  });
+  const addCustomEx=document.getElementById('add-custom-ex');
+  if(addCustomEx)addCustomEx.onclick=()=>{
+    syncExForm();
+    const inp=document.getElementById('f-custom-ex');
+    const name=(inp?.value||'').trim();
+    if(!name){toast('Escribe el nombre del ejercicio');return;}
+    if(ST.exForm.exercises.some(e=>e.name===name)){toast('Ya está añadido');return;}
+    ST.exForm.exercises.push({name,sets:[{reps:'',weight:''}]});
+    render();
+  };
+  q('[data-remove-ex]', el=>{
+    syncExForm();
+    ST.exForm.exercises.splice(parseInt(el.dataset.removeEx),1);
+    render();
+  });
+  q('[data-add-set]', el=>{
+    syncExForm();
+    const ei=parseInt(el.dataset.addSet);
+    const ex=ST.exForm.exercises[ei];
+    const lastSet=ex.sets[ex.sets.length-1]||{reps:'',weight:''};
+    ex.sets.push({reps:lastSet.reps||'',weight:lastSet.weight||''});
+    render();
+  });
+  q('[data-remove-set]', el=>{
+    syncExForm();
+    const[ei,si]=el.dataset.removeSet.split('-').map(Number);
+    ST.exForm.exercises[ei].sets.splice(si,1);
+    render();
+  });
 
   // Emotions
   q('[data-em]', el=>{ST.emotion=el.dataset.em;render();});
@@ -1279,10 +1676,20 @@ function attachAll(){
   // ── Saves ──────────────────────────────────────────────────────
   const sTr=document.getElementById('save-training');
   if(sTr)sTr.onclick=()=>{
+    syncExForm();
     const dur=parseInt(document.getElementById('f-dur')?.value)||0;
+    const exercise_sets={};
+    let exercisesText='';
+    ST.exForm.exercises.forEach(ex=>{
+      const sets=ex.sets.filter(s=>s.reps||s.weight).map(s=>({reps:s.reps||'',weight:s.weight||''}));
+      if(sets.length){
+        exercise_sets[ex.name]=sets;
+        exercisesText+=`${ex.name}: ${sets.map(s=>`${s.reps||'?'}x${s.weight||'?'}kg`).join(', ')}\n`;
+      }
+    });
     ST.trainings.push({id:Date.now(),date:td(),created_at:new Date().toISOString(),
       type:ST.form.type||'strength',muscles:[...ST.muscles],
-      exercises:document.getElementById('f-ex')?.value||'',
+      exercise_sets,exercises:exercisesText.trim(),
       cardio_type:document.getElementById('f-ctype')?.value||'',
       duration:dur,intensity:parseInt(document.getElementById('f-int')?.value)||5,
       notes:document.getElementById('f-notes')?.value||''});
@@ -1352,6 +1759,72 @@ function attachAll(){
       toast('Reconstrucción guardada 💜');ST.ttab='cogn';go('thoughts');
     }else{ST.cstep=step+1;render();}
   };
+
+  // ── Books ──────────────────────────────────────────────────────
+  q('[data-bstatus]', el=>{ST.bform.status=el.dataset.bstatus;render();});
+  const sBook=document.getElementById('save-book');
+  if(sBook)sBook.onclick=()=>{
+    const title=document.getElementById('b-title')?.value||'';
+    if(!title.trim()){toast('Ponle un título al libro');return;}
+    ST.books.push({id:Date.now(),date:td(),
+      title,author:document.getElementById('b-author')?.value||'',
+      status:ST.bform.status||'Leyendo',
+      ideas:document.getElementById('b-ideas')?.value||'',
+      quote:document.getElementById('b-quote')?.value||'',
+      application:document.getElementById('b-application')?.value||''});
+    persist('books');toast('Libro guardado ✓');go('more');
+  };
+
+  // ── AI settings ────────────────────────────────────────────────
+  const sApi=document.getElementById('save-apikey');
+  if(sApi)sApi.onclick=()=>{
+    const key=document.getElementById('f-apikey')?.value||'';
+    const model=document.getElementById('f-model')?.value||'claude-sonnet-4-6';
+    setStr('apikey',key.trim());setStr('model',model);
+    toast(key.trim()?'✓ Ajustes IA guardados':'API key eliminada');render();
+  };
+
+  // ── Coach chat ─────────────────────────────────────────────────
+  const coachSend=document.getElementById('coach-send');
+  const coachInput=document.getElementById('coach-input');
+  async function sendCoachMessage(){
+    const text=(coachInput?.value||'').trim();
+    if(!text||ST.coachLoading)return;
+    ST.coachMessages.push({role:'user',content:text});
+    ST.coachLoading=true;render();
+    const apiMsgs=ST.coachMessages.map(m=>({role:m.role,content:m.content}));
+    const reply=await callClaude(apiMsgs,COACH_SYSTEM_PROMPT,1024);
+    ST.coachLoading=false;
+    if(reply)ST.coachMessages.push({role:'assistant',content:reply});
+    if(ST.coachMessages.length>30)ST.coachMessages=ST.coachMessages.slice(-30);
+    lsSet('coach_history',ST.coachMessages);
+    render();
+  }
+  if(coachSend)coachSend.onclick=sendCoachMessage;
+  if(coachInput)coachInput.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();sendCoachMessage();}});
+
+  // ── Report AI analysis ────────────────────────────────────────
+  const btnReportAi=document.getElementById('btn-report-ai');
+  if(btnReportAi)btnReportAi.onclick=async()=>{
+    ST.reportAnalysisLoading=true;render();
+    const from=ST.rfrom,to=ST.rto;
+    const userMsg=`Acabo de generar mi informe del periodo ${fdateShort(from)} a ${fdateShort(to)}. Analízalo con los datos que tienes y dime: qué patrones ves, qué estoy consolidando, dónde estoy fallando, y qué debería priorizar los próximos días. Sé breve y concreto.`;
+    const reply=await callClaude([{role:'user',content:userMsg}],COACH_SYSTEM_PROMPT,1024);
+    ST.reportAnalysisLoading=false;
+    ST.reportAnalysis=reply||'No se pudo generar el análisis. Revisa tu API key en Más → Ajustes IA.';
+    render();
+  };
+
+  // ── Progression analysis ──────────────────────────────────────
+  const btnProgAi=document.getElementById('btn-prog-analysis');
+  if(btnProgAi)btnProgAi.onclick=async()=>{
+    ST.progAnalysisLoading=true;render();
+    const userMsg=`Mira mi historial de entrenamientos, especialmente los pesos y repeticiones por ejercicio. Dime en qué ejercicios estoy estancado (mismo peso varias sesiones), qué variación me recomiendas para cada uno, y si ves algún desequilibrio entre grupos musculares (por ejemplo, mucho empuje y poco tirón). Sé breve, directo y concreto, en 4-6 frases.`;
+    const reply=await callClaude([{role:'user',content:userMsg}],COACH_SYSTEM_PROMPT,800);
+    ST.progAnalysisLoading=false;
+    ST.progAnalysis=reply||'No se pudo generar el análisis. Revisa tu API key en Más → Ajustes IA.';
+    render();
+  };
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1359,6 +1832,7 @@ function attachAll(){
 // ═══════════════════════════════════════════════════════════════
 setPreset('week');
 loadAll();
+ST.coachMessages=lsGet('coach_history')||[];
 render();
 </script>
 </body>
